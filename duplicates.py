@@ -13,7 +13,7 @@ BLOCK_SIZE = 65536
 MAX_FILES = 10000
 PROCESSES = 2
 SIZE_UNIT = "GB"
-LOG_FILE = "duplicates.txt"
+RESULTS_FILE = "results.txt"
 DEFAULT_ALG = "sha1"
 
 
@@ -201,7 +201,7 @@ class DuplicateFinder:
             print(files)
         print("=" * 100)
 
-    def write_results_to_file(self, file=LOG_FILE):
+    def write_results_to_file(self, file=RESULTS_FILE):
         """
         Write results to file for further processing
         :param str file: path to log file
