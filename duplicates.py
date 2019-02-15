@@ -8,9 +8,9 @@ import json
 from multiprocessing import Pool, freeze_support
 from collections import OrderedDict
 
-TARGET_DIR = r"D:\SteamGames"
+TARGET_DIR = r"C:\Program Files (x86)\Steam"
 BLOCK_SIZE = 65536
-MAX_FILES = 25000
+MAX_FILES = 10000
 PROCESSES = 2
 SIZE_UNIT = "GB"
 LOG_FILE = "duplicates.txt"
