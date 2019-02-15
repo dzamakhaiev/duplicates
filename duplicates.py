@@ -34,6 +34,8 @@ class DuplicateFinder:
     def __init__(self, top_directory, max_files_to_check=MAX_FILES, alg=DEFAULT_ALG):
         """
         :param str top_directory: target directory where script will try to find duplicates of files
+        :param int max_files_to_check: max number of files that will be stored in dictionary
+        :param str alg: selected algorithm to check files
         """
         self.top_directory = top_directory
         self.files = {}  # dict where key is file path and value is hash sum
