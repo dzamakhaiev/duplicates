@@ -15,6 +15,7 @@ PROCESSES = 2
 SIZE_UNIT = "GB"
 RESULTS_FILE = "results.txt"
 DEFAULT_ALG = "sha1"
+UNITS = {"MB": (2, "megabytes"), "GB": (3, "gigabytes"), "TB":  (4, "terabytes")}
 
 
 class Hash:
@@ -50,19 +51,8 @@ class DuplicateFinder:
         self.duplicates_size = None  # total size of duplicated files
         self.start_time = time.time()
         self.end_time = None
-
-        if SIZE_UNIT == "MB":
-            self.degree = 2
-            self.unit = "megabytes"
-        elif SIZE_UNIT == "GB":
-            self.degree = 3
-            self.unit = "gigabytes"
-        elif SIZE_UNIT == "TB":
-            self.degree = 4
-            self.unit = "terabytes"
-        else:
-            self.degree = 2
-            self.unit = "megabytes"
+        self.degree = UNITS[SIZE_UNIT][0]  # set up degree value for calculate file size
+        self.unit = UNITS[SIZE_UNIT][1]  # set up unit value for show file size
 
     def get_files_sizes(self):
         """
