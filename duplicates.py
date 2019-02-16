@@ -5,6 +5,7 @@ import os
 import hashlib
 import time
 import json
+import logging
 from multiprocessing import Pool, freeze_support
 from collections import OrderedDict
 
@@ -14,8 +15,16 @@ MAX_FILES = 10000
 PROCESSES = 2
 SIZE_UNIT = "GB"
 RESULTS_FILE = "results.txt"
+LOG_FILE = "log.txt"
 DEFAULT_ALG = "sha1"
 UNITS = {"MB": (2, "megabytes"), "GB": (3, "gigabytes"), "TB":  (4, "terabytes")}
+
+logger = logging.getLogger("main")
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler("log.txt")
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 class Hash:
@@ -44,6 +53,7 @@ class DuplicateFinder:
         self.results = OrderedDict()  # dict with check results
         self.max_files_to_check = max_files_to_check  # maximum number of files for check to scale a time of execution
         self.alg = alg  # hashing algorithm
+        logger.info(msg='Selected hashing type: {}'.format(self.alg))
 
         self.f_hashes = None  # list of all calculated hashes
         self.f_sizes = None  # list of all files sizes
@@ -53,6 +63,9 @@ class DuplicateFinder:
         self.end_time = None
         self.degree = UNITS[SIZE_UNIT][0]  # set up degree value for calculate file size
         self.unit = UNITS[SIZE_UNIT][1]  # set up unit value for show file size
+
+        logger.info(msg='Unit degree: {}'.format(self.degree))
+        logger.info(msg='Unit value: {}'.format(self.unit))
 
     def get_files_sizes(self):
         """
@@ -66,6 +79,7 @@ class DuplicateFinder:
         """
         total_size = sum(self.f_sizes)
         self.total_size = round(total_size / (1024 ** self.degree), 2)
+        logger.debug(msg='Total size: {} {}'.format(self.total_size, self.unit))
 
     def get_duplicates_size(self):
         """
@@ -78,6 +92,7 @@ class DuplicateFinder:
 
         self.duplicates_size = sum(duplicates_size)
         self.duplicates_size = round(self.duplicates_size / (1024 ** self.degree), 2)
+        logger.debug(msg='Duplicated files size: {} {}'.format(self.duplicates_size, self.unit))
 
     @staticmethod
     def get_file_size(f_path):
@@ -88,7 +103,8 @@ class DuplicateFinder:
         """
         try:
             return os.path.getsize(f_path)
-        except OSError:
+        except OSError as e:
+            logger.error(msg=e)
             return None
 
     def get_files(self):
@@ -96,17 +112,22 @@ class DuplicateFinder:
         Find and save in dict all files from target directory
         Key is file path and Value is hash sum of file(None for this step)
         """
+        logger.info(msg='Start collecting of files')
         counter = 0
 
-        for result in os.walk(top=self.top_directory):
-            current_dir, included_dirs, included_files = result
+        try:
+            for result in os.walk(top=self.top_directory):
+                current_dir, included_dirs, included_files = result
 
-            for f in included_files:
-                f_path = os.path.join(current_dir, f)
-                self.files.update({f_path: {"f_hash": None, "f_size": self.get_file_size(f_path)}})
-                counter += 1
+                for f in included_files:
+                    f_path = os.path.join(current_dir, f)
+                    self.files.update({f_path: {"f_hash": None, "f_size": self.get_file_size(f_path)}})
+                    counter += 1
 
-            if counter > self.max_files_to_check: break
+                if counter > self.max_files_to_check: break
+
+        except (OSError, PermissionError) as e:
+            logger.error(msg=e)
 
     def get_hash_of_file(self, f_path):
         """
@@ -123,12 +144,14 @@ class DuplicateFinder:
             return f_path, f_hash.hexdigest()
 
         except (PermissionError, OSError):
+            logger.error(msg=ellipsis)
             return f_path, None
 
     def get_hashes(self):
         """
         Open each file from files dict and calculate hash sum
         """
+        logger.info(msg='Start calculating hashes')
         self.get_files_sizes()
         files = [f_path for f_path, f_meta in self.files.items() if self.f_sizes.count(f_meta["f_size"]) > 1]
 
@@ -149,13 +172,17 @@ class DuplicateFinder:
         if self.duplicates.get(f_hash):
             f_list = self.duplicates.get(f_hash)
             f_list.append(f_path)
+            logger.debug(msg='Add duplicated file: {}'.format(f_path))
+
         else:
+            logger.debug(msg='Add another duplicated file: {}'.format(f_path))
             self.duplicates.update({f_hash: [f_path]})
 
     def find(self):
         """
         Find files with equal hashes
         """
+        logger.info(msg='Finding duplicates')
         self.f_hashes = [f_meta["f_hash"] for f_meta in self.files.values() if f_meta["f_hash"]]
 
         for f_path, f_meta in self.files.items():
@@ -171,6 +198,8 @@ class DuplicateFinder:
         Aggregate results of check in dict
         """
         duration = round(self.end_time - self.start_time, 2)
+        logger.debug(msg='Duration time: {}'.format(duration))
+
         self.results.update({"Target directory": TARGET_DIR})
         self.results.update({"Files found": self.files.__len__()})
         self.results.update({"Files checked": self.f_hashes.__len__()})
@@ -185,6 +214,7 @@ class DuplicateFinder:
         """
         Print duplicate files in cmd
         """
+        logger.info(msg='Show duplicates in console')
         for f_hash, f_list in self.duplicates.items():
             print("=" * 100)
             files = "\n".join([f_path for f_path in f_list])
@@ -196,17 +226,24 @@ class DuplicateFinder:
         Write results to file for further processing
         :param str file: path to log file
         """
-        log_file = open(file=file, mode="a")
-        json.dump(self.results, log_file)
-        log_file.write("\n")
-        log_file.close()
+        logger.info(msg='Write results to file: {}'.format(file))
+
+        try:
+            log_file = open(file=file, mode="a")
+            json.dump(self.results, log_file)
+            log_file.write("\n")
+            log_file.close()
+        except OSError as e:
+            logger.error(msg=e)
 
     def show_results(self):
         """
-        Measure duration of check
+        Show results of check
         """
+        logger.info(msg='Show results in console')
         for key, value in self.results.items():
             print("{}: {}".format(key, value))
+            logger.debug(msg="{}: {}".format(key, value))
 
 
 if __name__ == '__main__':
