@@ -246,6 +246,47 @@ class DuplicateFinder:
             logger.debug(msg="{}: {}".format(key, value))
 
 
+class Files:
+
+    def __init__(self, top_dir, max_files):
+        self.top_dir = top_dir
+        self.max_files = max_files
+
+    def find(self, top=None, max_files=None):
+        if not top:
+            top = self.top_dir
+        if not max_files:
+            max_files = self.max_files
+
+        files = {}
+        counter = 0
+
+        try:
+            for result in os.walk(top=top):
+                current_dir, included_dirs, included_files = result
+
+                # Collect found files to dict and save file size
+                for f in included_files:
+                    f_path = os.path.join(current_dir, f)
+                    files.update({f_path: {"f_hash": None, "f_size": self.get_file_size(f_path)}})
+                    counter += 1
+
+                if counter > max_files: break
+
+        except (OSError, PermissionError) as e:
+            logger.error(msg=e)
+
+        return files
+
+    @staticmethod
+    def get_file_size(f_path):
+        try:
+            return os.path.getsize(f_path)
+        except OSError as e:
+            logger.error(msg=e)
+            return None
+
+
 if __name__ == '__main__':
     freeze_support()
 
