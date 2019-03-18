@@ -8,6 +8,8 @@ import json
 import logging
 from multiprocessing import Pool, freeze_support
 from collections import OrderedDict
+from copy import deepcopy
+
 
 TARGET_DIR = r"C:\Program Files (x86)\Steam"
 BLOCK_SIZE = 65536
@@ -248,9 +250,11 @@ class DuplicateFinder:
 
 class Files:
 
-    def __init__(self, top_dir, max_files):
+    def __init__(self, top_dir, max_files=MAX_FILES):
         self.top_dir = top_dir
         self.max_files = max_files
+        self.files = {}
+        self.file_sizes = 0
 
     def find(self, top=None, max_files=None):
         if not top:
@@ -276,7 +280,24 @@ class Files:
         except (OSError, PermissionError) as e:
             logger.error(msg=e)
 
+        self.files = deepcopy(files)  # save dict in self for further use and protect from possible changes
         return files
+
+    def find_equal_files(self, files=None):
+        """
+        Get list of files with equal size
+        """
+        if not files:
+            files = self.files
+
+        equal_files = []
+        self.file_sizes = [int(f_meta['f_size']) for _, f_meta in files.items()]
+
+        for f_path, f_meta in files.items():
+            if self.file_sizes.count(f_meta['f_size']) > 1:
+                equal_files.append(f_path)
+
+        return equal_files
 
     @staticmethod
     def get_file_size(f_path):
@@ -285,6 +306,14 @@ class Files:
         except OSError as e:
             logger.error(msg=e)
             return None
+
+    def get_files_sizes(self, files):
+        """
+        Get list with sizes of all checked files
+        """
+        if not files:
+            files = self.files
+        self.f_sizes = [int(f_meta["f_size"]) for f_meta in files.values() if f_meta["f_size"]]
 
 
 if __name__ == '__main__':
@@ -298,3 +327,10 @@ if __name__ == '__main__':
     finder.calculate_results()
     finder.show_results()
     finder.write_results_to_file()
+
+    # debug
+    files = Files(top_dir=TARGET_DIR)
+    f = files.find()
+    print(len(f))
+    e = files.find_equal_files(f)
+    print(len(e))
