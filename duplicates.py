@@ -145,8 +145,8 @@ class DuplicateFinder:
                     f_hash.update(buf)
             return f_path, f_hash.hexdigest()
 
-        except (PermissionError, OSError):
-            logger.error(msg=ellipsis)
+        except (PermissionError, OSError) as e:
+            logger.error(msg=e)
             return f_path, None
 
     def get_hashes(self):
@@ -314,6 +314,50 @@ class Files:
         if not files:
             files = self.files
         self.f_sizes = [int(f_meta["f_size"]) for f_meta in files.values() if f_meta["f_size"]]
+
+
+class Hashes:
+
+    def __init__(self, alg=DEFAULT_ALG):
+        self.alg = alg
+
+    def get_hash_of_file(self, f_path, alg=None):
+        """
+        Open file, calculate hash of file and return it if it exists
+        """
+        if not alg:
+            alg = self.alg
+        hasher = getattr(hashlib, alg, hashlib.sha1())()
+
+        try:
+            with open(f_path, 'rb') as f_file:
+                for buf in f_file:
+                    hasher.update(buf)
+            return hasher.hexdigest()
+
+        except (PermissionError, OSError) as e:
+            logger.error(msg=e)
+            return None
+
+    @staticmethod
+    def add_hash(hashes, f_hash, f_path):
+        """
+        :param dict hashes:
+        :param str f_hash:
+        :param str f_path:
+        """
+        if hash in hashes:
+            hashes[f_hash]['f_paths'].append(f_path)
+        else:
+            hashes.update({f_hash: {'f_paths': [f_path]}})
+
+    def calculate_hashes(self, equal_files):
+        hashes = {}
+        for f_path in equal_files:
+            f_hash = self.get_hash_of_file(f_path)
+            self.add_hash(hashes=hashes, f_hash=f_hash, f_path=f_path)
+
+        return hashes
 
 
 if __name__ == '__main__':
