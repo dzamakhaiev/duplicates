@@ -291,10 +291,10 @@ class Files:
             files = self.files
 
         equal_files = []
-        self.file_sizes = [int(f_meta['f_size']) for _, f_meta in files.items()]
+        file_sizes = self.get_files_sizes(files)
 
         for f_path, f_meta in files.items():
-            if self.file_sizes.count(f_meta['f_size']) > 1:
+            if file_sizes.count(f_meta['f_size']) > 1:
                 equal_files.append(f_path)
 
         return equal_files
@@ -313,7 +313,11 @@ class Files:
         """
         if not files:
             files = self.files
-        self.f_sizes = [int(f_meta["f_size"]) for f_meta in files.values() if f_meta["f_size"]]
+
+        file_sizes = [int(f_meta["f_size"]) for f_meta in files.values() if f_meta["f_size"]]
+        self.file_sizes = deepcopy(file_sizes)
+
+        return file_sizes
 
 
 class Hashes:
