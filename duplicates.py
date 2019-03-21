@@ -250,7 +250,7 @@ class DuplicateFinder:
 
 class Files:
 
-    def __init__(self, top_dir, max_files=MAX_FILES):
+    def __init__(self, top_dir=TARGET_DIR, max_files=MAX_FILES):
         self.top_dir = top_dir
         self.max_files = max_files
         self.files = {}
