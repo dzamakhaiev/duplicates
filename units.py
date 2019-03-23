@@ -73,6 +73,12 @@ class UnitDuplicates(unittest.TestCase):
         self.duplicates_instance = duplicates.Duplicates()
 
     def test_find_duplicates(self):
+        """
+        Check find_duplicates method. This method find duplicated files by its hashes.
+        Input: dict {hash: {paths:[....]}}. If hash has more than one linked file path
+        that hash adding to duplicates dict. If input dict has no duplicates, method returns empty dict.
+        """
+
         for desc, input_dict, expected in DUPLICATES_CHECK:
             with self.subTest(msg=desc):
 
