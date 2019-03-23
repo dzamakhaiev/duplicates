@@ -16,6 +16,11 @@ class UnitFiles(unittest.TestCase):
         self.files_instance = duplicates.Files()
 
     def test_find_equal_files(self):
+        """
+        Check find_equal_files method. This method checks dict with files {file path: {file size, etc}}
+        and returns list with equal files compared by size.
+        If no such files - returns empty list.
+        """
 
         for desc, input_dict, expected in TEST_DICTS:
             with self.subTest(msg=desc):
