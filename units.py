@@ -52,5 +52,17 @@ class UnitFiles(unittest.TestCase):
                     self.assertEqual(expected, result)
 
 
+class UnitHashes(unittest.TestCase):
+
+    def setUp(self):
+        self.hashes_instance = duplicates.Hashes()
+
+
+class UnitDuplicates(unittest.TestCase):
+
+    def setUp(self):
+        self.duplicates_instance = duplicates.Duplicates()
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
