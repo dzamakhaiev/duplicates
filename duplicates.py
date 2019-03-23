@@ -356,6 +356,8 @@ class Hashes:
         """
         if f_hash in hashes:
             hashes[f_hash]['f_paths'].append(f_path)
+            paths = set(hashes[f_hash]['f_paths'])
+            hashes[f_hash]['f_paths'] = list(paths)  # remove duplicated paths just in case
         else:
             hashes.update({f_hash: {'f_paths': [f_path]}})
 
