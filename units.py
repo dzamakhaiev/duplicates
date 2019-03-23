@@ -15,6 +15,15 @@ SIZE_CHECK = [
     ('Test dict with empty meta dict for one file', {'test_path_0': {'f_size': 123}, 'test_path_1': {}}, [123]),
     ('Test empty dict', {}, [])]
 
+DUPLICATES_CHECK = [
+    ('Test dict with hash that has multiple files',
+     {'hash0': {'f_paths': ['path0', 'path1']}, 'hash1': {'f_paths': ['path2']}},
+     {'hash0': {'f_paths': ['path0', 'path1']}}),
+    ('Test dict with unique hashes and files',
+     {'hash0': {'f_paths': ['path0']}, 'hash1': {'f_paths': ['path1']}}, {}),
+    ('Test empty dict', {}, {}),
+]
+
 
 class UnitFiles(unittest.TestCase):
 
@@ -62,6 +71,13 @@ class UnitDuplicates(unittest.TestCase):
 
     def setUp(self):
         self.duplicates_instance = duplicates.Duplicates()
+
+    def test_find_duplicates(self):
+        for desc, input_dict, expected in DUPLICATES_CHECK:
+            with self.subTest(msg=desc):
+
+                result = self.duplicates_instance.find_duplicates(hashes=input_dict)
+                self.assertEqual(expected, result)
 
 
 if __name__ == '__main__':
