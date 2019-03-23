@@ -354,7 +354,7 @@ class Hashes:
         :param str f_hash:
         :param str f_path:
         """
-        if hash in hashes:
+        if f_hash in hashes:
             hashes[f_hash]['f_paths'].append(f_path)
         else:
             hashes.update({f_hash: {'f_paths': [f_path]}})
@@ -366,6 +366,21 @@ class Hashes:
             self.add_hash(hashes=hashes, f_hash=f_hash, f_path=f_path)
 
         return hashes
+
+
+class Duplicates:
+
+    def __init__(self):
+        self.duplicates = {}
+
+    def find_duplicates(self, hashes):
+        duplicates = {}
+        for f_hash, paths in hashes.items():
+            if len(paths['f_paths'][1:]):
+                duplicates.update({f_hash: {'f_paths': paths['f_paths']}})
+
+        self.duplicates = deepcopy(duplicates)
+        return duplicates
 
 
 if __name__ == '__main__':
@@ -384,5 +399,11 @@ if __name__ == '__main__':
     files = Files(top_dir=TARGET_DIR)
     f = files.find()
     print(len(f))
-    e = files.find_equal_files(f)
+    e = files.find_equal_files(files=f)
     print(len(e))
+    hashes = Hashes()
+    h = hashes.calculate_hashes(equal_files=e)
+    print(len(h))
+    duplicates = Duplicates()
+    d = duplicates.find_duplicates(hashes=h)
+    print(len(d))
