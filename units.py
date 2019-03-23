@@ -24,6 +24,12 @@ DUPLICATES_CHECK = [
     ('Test empty dict', {}, {}),
 ]
 
+HASH_CHECK = [
+    ('Test adding hash firs time', {}, 'hash0', 'path0', {'hash0': {'f_paths': ['path0']}}),
+    ('Test adding hash second time', {'hash0': {'f_paths': ['path0']}}, 'hash0', 'path1', {'hash0': {'f_paths': ['path0', 'path1']}}),
+    ('Test adding duplicated path', {'hash0': {'f_paths': ['path0']}}, 'hash0', 'path0', {'hash0': {'f_paths': ['path0']}})
+]
+
 
 class UnitFiles(unittest.TestCase):
 
@@ -65,6 +71,17 @@ class UnitHashes(unittest.TestCase):
 
     def setUp(self):
         self.hashes_instance = duplicates.Hashes()
+
+    def test_add_hash(self):
+        """
+        Check add_hash. This method update hashes dict with new hashes and paths. Returns nothing.
+        If dict already has hash, add new file path linked to this hash.
+        """
+        for desc, input_dict, f_hash, f_path, expected in HASH_CHECK:
+            with self.subTest(msg=desc):
+
+                self.hashes_instance.add_hash(hashes=input_dict, f_hash=f_hash, f_path=f_path)
+                self.assertEqual(expected, input_dict)
 
 
 class UnitDuplicates(unittest.TestCase):
