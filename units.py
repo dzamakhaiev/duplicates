@@ -1,26 +1,30 @@
 import unittest
 import duplicates
 
+TEST_DICTS = [
+    ('Test dict with equal files', {'test_path_0': {'f_size': 123}, 'test_path_1': {'f_size': 123}}, True),
+    ('Test dict with not equal files', {'test_path_0': {'f_size': 123}, 'test_path_1': {'f_size': 321}}, []),
+    ('Test dict with empty file size', {'test_path_0': {'f_size': 123}, 'test_path_1': {'f_size': None}}, []),
+    ('Test dict with empty meta dict', {'test_path_0': {'f_size': 123}, 'test_path_1': {}}, []),
+    ('Test empty dict', {}, []),
+]
+
 
 class UnitFiles(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.positive_dict = {'test_path_0': {'f_size': 123}, 'test_path_1': {'f_size': 123}}
-        cls.negative_dict = {'test_path_0': {'f_size': 123}, 'test_path_1': {'f_size': 321}}
 
     def setUp(self):
         self.files_instance = duplicates.Files()
 
     def test_find_equal_files(self):
 
-        with self.subTest(msg='Check dict with equal files by size'):
-            result = self.files_instance.find_equal_files(files=self.positive_dict)
-            self.assertTrue(result)
+        for desc, input_dict, expected in TEST_DICTS:
+            with self.subTest(msg=desc):
 
-        with self.subTest(msg='Check dict with not equal files by size'):
-            result = self.files_instance.find_equal_files(files=self.negative_dict)
-            self.assertFalse(result)
+                result = self.files_instance.find_equal_files(files=input_dict)
+                if expected:
+                    self.assertTrue(result)
+                else:
+                    self.assertEqual(expected, result)
 
 
 if __name__ == '__main__':
