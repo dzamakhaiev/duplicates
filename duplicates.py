@@ -376,9 +376,11 @@ class Hashes:
 
 class Duplicates:
 
-    def __init__(self, files=None):
+    def __init__(self, files=None, hashes=None):
         self.duplicates = {}
+        self.results = {}
         self.files = files if files else {}
+        self.hashes = hashes if hashes else {}
 
     def get_file_size(self, f_paths):
         """
@@ -408,20 +410,26 @@ class Duplicates:
         self.duplicates = deepcopy(duplicates)
         return duplicates
 
+    def calculate_results(self):
+        """
+        Aggregate results of check in dict
+        """
+        self.results.update({"Target directory": TARGET_DIR})
+        self.results.update({"Files found": self.files.__len__()})
+        self.results.update({"Files checked": self.hashes.__len__()})
+        self.results.update({"Duplicates found": self.duplicates.__len__()})
+
+    def show_results(self):
+        """
+        Show results in console
+        """
+        logger.info(msg='Show results in console')
+        for key, value in self.results.items():
+            print("{}: {}".format(key, value))
+            logger.debug(msg="{}: {}".format(key, value))
+
 
 if __name__ == '__main__':
-    # freeze_support()
-    #
-    # finder = DuplicateFinder(top_directory=TARGET_DIR)
-    # finder.get_files()
-    # finder.get_hashes()
-    # finder.find()
-    # finder.show_duplicates()
-    # finder.calculate_results()
-    # finder.show_results()
-    # finder.write_results_to_file()
-
-    # debug
     files = Files(top_dir=TARGET_DIR)
     f = files.find()
     print(len(f))
@@ -430,6 +438,8 @@ if __name__ == '__main__':
     hashes = Hashes()
     h = hashes.calculate_hashes(equal_files=e)
     print(len(h))
-    duplicates = Duplicates()
+    duplicates = Duplicates(hashes=h, files=f)
     d = duplicates.find_duplicates(hashes=h)
     print(len(d))
+    duplicates.calculate_results()
+    duplicates.show_results()
