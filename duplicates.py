@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import hashlib
 import time
 import json
 import logging
-from multiprocessing import Pool, freeze_support
+import args
+from multiprocessing import Pool
 from collections import OrderedDict
 from copy import deepcopy
 
@@ -250,7 +252,8 @@ class DuplicateFinder:
 
 class Files:
 
-    def __init__(self, top_dir=TARGET_DIR, max_files=MAX_FILES):
+    def __init__(self, top_dir=TARGET_DIR, max_files=MAX_FILES, args=None):
+        self.args = args
         self.top_dir = top_dir
         self.max_files = max_files
         self.files = {}
@@ -328,7 +331,8 @@ class Files:
 
 class Hashes:
 
-    def __init__(self, alg=DEFAULT_ALG):
+    def __init__(self, alg=DEFAULT_ALG, args=None):
+        self.args = args
         self.alg = alg
 
     def get_hash_of_file(self, f_path, alg=None):
@@ -376,7 +380,8 @@ class Hashes:
 
 class Duplicates:
 
-    def __init__(self, files=None, hashes=None):
+    def __init__(self, files=None, hashes=None, args=None):
+        self.args = args
         self.duplicates = {}
         self.results = {}
         self.files = files if files else {}
@@ -430,12 +435,26 @@ class Duplicates:
 
 
 if __name__ == '__main__':
-    files = Files(top_dir=TARGET_DIR)
-    f = files.find()
-    e = files.find_equal_files(files=f)
-    hashes = Hashes()
-    h = hashes.calculate_hashes(equal_files=e)
-    duplicates = Duplicates(hashes=h, files=f)
-    d = duplicates.find_duplicates(hashes=h)
+
+    # user mode
+    if len(sys.argv) > 1:
+        files = Files(top_dir=TARGET_DIR, args=args.parser.parse_args())
+        f = files.find()
+        e = files.find_equal_files(files=f)
+        hashes = Hashes(args=args.parser.parse_args())
+        h = hashes.calculate_hashes(equal_files=e)
+        duplicates = Duplicates(hashes=h, files=f, args=args.parser.parse_args())
+        d = duplicates.find_duplicates(hashes=h)
+
+    # debug mode
+    else:
+        files = Files(top_dir=TARGET_DIR)
+        f = files.find()
+        e = files.find_equal_files(files=f)
+        hashes = Hashes()
+        h = hashes.calculate_hashes(equal_files=e)
+        duplicates = Duplicates(hashes=h, files=f)
+        d = duplicates.find_duplicates(hashes=h)
+
     duplicates.calculate_results()
     duplicates.show_results()
