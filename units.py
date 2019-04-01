@@ -18,7 +18,7 @@ SIZE_CHECK = [
 DUPLICATES_CHECK = [
     ('Test dict with hash that has multiple files',
      {'hash0': {'f_paths': ['path0', 'path1']}, 'hash1': {'f_paths': ['path2']}},
-     {'hash0': {'f_paths': ['path0', 'path1']}}),
+     {'hash0': {'f_paths': ['path0', 'path1'], 'f_size': None}}),
     ('Test dict with unique hashes and files',
      {'hash0': {'f_paths': ['path0']}, 'hash1': {'f_paths': ['path1']}}, {}),
     ('Test empty dict', {}, {}),
