@@ -13,7 +13,7 @@ from collections import OrderedDict
 from copy import deepcopy
 
 
-TARGET_DIR = r"/home"
+TARGET_DIR = r"C:\Program Files (x86)\Steam"
 BLOCK_SIZE = 65536
 MAX_FILES = 10000
 PROCESSES = 2
@@ -258,8 +258,19 @@ class Files:
         self.max_files = max_files
         self.files = {}
         self.file_sizes = 0
+        self.scanning = 0
+        self.finding = 0
 
     def find(self, top=None, max_files=None):
+        """
+        Find all files in directory. Limited by max_files
+        :param top:
+        :param max_files:
+        :return:
+        """
+        logger.info(msg='Start scanning the directory: {}'.format(top))
+        start = time.time()
+
         if not top:
             top = self.top_dir
         if not max_files:
@@ -283,6 +294,8 @@ class Files:
         except (OSError, PermissionError) as e:
             logger.error(msg=e)
 
+        logger.info(msg='Complete scanning the directory')
+        self.scanning = round(time.time() - start, 1)
         self.files = deepcopy(files)  # save dict in self for further use and protect from possible changes
         return files
 
@@ -290,6 +303,9 @@ class Files:
         """
         Get list of files with equal size
         """
+        logger.info(msg='Start finding equal files by size')
+        start = time.time()
+
         if not files:
             files = self.files
 
@@ -300,6 +316,8 @@ class Files:
             if f_meta and f_meta.get('f_size') and file_sizes.count(f_meta['f_size']) > 1:
                 equal_files.append(f_path)
 
+        logger.info(msg='Complete finding equal files')
+        self.finding = round(time.time() - start, 1)
         equal_files.sort()
         return equal_files
 
