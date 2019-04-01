@@ -272,7 +272,7 @@ class Files:
                 # Collect found files to dict and save file size
                 for f in included_files:
                     f_path = os.path.join(current_dir, f)
-                    files.update({f_path: {"f_hash": None, "f_size": self.get_file_size(f_path)}})
+                    files.update({f_path: {"f_size": self.get_file_size(f_path)}})
                     counter += 1
 
                 if counter > max_files: break
@@ -294,7 +294,7 @@ class Files:
         file_sizes = self.get_files_sizes(files)
 
         for f_path, f_meta in files.items():
-            if file_sizes.count(f_meta['f_size']) > 1:
+            if f_meta and f_meta.get('f_size') and file_sizes.count(f_meta['f_size']) > 1:
                 equal_files.append(f_path)
 
         return equal_files
@@ -314,7 +314,11 @@ class Files:
         if not files:
             files = self.files
 
-        file_sizes = [int(f_meta["f_size"]) for f_meta in files.values() if f_meta["f_size"]]
+        file_sizes = []
+        for f_meta in files.values():
+            if f_meta and f_meta.get("f_size"):
+                file_sizes.append(int(f_meta["f_size"]))
+
         self.file_sizes = deepcopy(file_sizes)
 
         return file_sizes
@@ -350,8 +354,10 @@ class Hashes:
         :param str f_hash:
         :param str f_path:
         """
-        if hash in hashes:
+        if f_hash in hashes:
             hashes[f_hash]['f_paths'].append(f_path)
+            paths = set(hashes[f_hash]['f_paths'])
+            hashes[f_hash]['f_paths'] = list(paths)  # remove duplicated paths just in case
         else:
             hashes.update({f_hash: {'f_paths': [f_path]}})
 
@@ -362,6 +368,21 @@ class Hashes:
             self.add_hash(hashes=hashes, f_hash=f_hash, f_path=f_path)
 
         return hashes
+
+
+class Duplicates:
+
+    def __init__(self):
+        self.duplicates = {}
+
+    def find_duplicates(self, hashes):
+        duplicates = {}
+        for f_hash, paths in hashes.items():
+            if len(paths['f_paths'][1:]):
+                duplicates.update({f_hash: {'f_paths': paths['f_paths']}})
+
+        self.duplicates = deepcopy(duplicates)
+        return duplicates
 
 
 if __name__ == '__main__':
@@ -380,5 +401,11 @@ if __name__ == '__main__':
     files = Files(top_dir=TARGET_DIR)
     f = files.find()
     print(len(f))
-    e = files.find_equal_files(f)
+    e = files.find_equal_files(files=f)
     print(len(e))
+    hashes = Hashes()
+    h = hashes.calculate_hashes(equal_files=e)
+    print(len(h))
+    duplicates = Duplicates()
+    d = duplicates.find_duplicates(hashes=h)
+    print(len(d))
