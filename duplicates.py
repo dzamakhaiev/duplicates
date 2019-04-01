@@ -268,14 +268,13 @@ class Files:
         :param max_files:
         :return:
         """
-        logger.info(msg='Start scanning the directory: {}'.format(top))
-        start = time.time()
-
         if not top:
             top = self.top_dir
         if not max_files:
             max_files = self.max_files
 
+        logger.info(msg='Start scanning the directory: {}'.format(top))
+        start = time.time()
         files = {}
         counter = 0
 
@@ -352,6 +351,7 @@ class Hashes:
     def __init__(self, alg=DEFAULT_ALG, args=None):
         self.args = args
         self.alg = alg
+        self.hashing = 0
 
     def get_hash_of_file(self, f_path, alg=None):
         """
@@ -388,11 +388,16 @@ class Hashes:
             hashes.update({f_hash: {'f_paths': [f_path]}})
 
     def calculate_hashes(self, equal_files):
+        logger.info(msg='Start calculating hashes')
+        start = time.time()
         hashes = {}
+
         for f_path in equal_files:
             f_hash = self.get_hash_of_file(f_path)
             self.add_hash(hashes=hashes, f_hash=f_hash, f_path=f_path)
 
+        logger.info(msg='Complete calculating hashes')
+        self.hashing = round(time.time() - start, 1)
         return hashes
 
 
@@ -404,6 +409,7 @@ class Duplicates:
         self.results = {}
         self.files = files if files else {}
         self.hashes = hashes if hashes else {}
+        self.finding = 0
 
     def get_file_size(self, f_paths):
         """
@@ -422,6 +428,8 @@ class Duplicates:
                 return f_size
 
     def find_duplicates(self, hashes):
+        logger.info(msg='Start finding equal files by hash')
+        start = time.time()
         duplicates = {}
 
         for f_hash, paths in hashes.items():
@@ -430,6 +438,8 @@ class Duplicates:
                 f_size = self.get_file_size(paths['f_paths'])
                 duplicates.update({f_hash: {'f_paths': paths['f_paths'], 'f_size': f_size}})
 
+        logger.info(msg='Complete finding equal files')
+        self.finding = round(time.time() - start, 1)
         self.duplicates = deepcopy(duplicates)
         return duplicates
 
