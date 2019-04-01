@@ -11,7 +11,7 @@ from collections import OrderedDict
 from copy import deepcopy
 
 
-TARGET_DIR = r"C:\Program Files (x86)\Steam"
+TARGET_DIR = r"/home"
 BLOCK_SIZE = 65536
 MAX_FILES = 10000
 PROCESSES = 2
@@ -297,6 +297,7 @@ class Files:
             if f_meta and f_meta.get('f_size') and file_sizes.count(f_meta['f_size']) > 1:
                 equal_files.append(f_path)
 
+        equal_files.sort()
         return equal_files
 
     @staticmethod
@@ -321,6 +322,7 @@ class Files:
 
         self.file_sizes = deepcopy(file_sizes)
 
+        file_sizes.sort()
         return file_sizes
 
 
@@ -357,7 +359,9 @@ class Hashes:
         if f_hash in hashes:
             hashes[f_hash]['f_paths'].append(f_path)
             paths = set(hashes[f_hash]['f_paths'])
-            hashes[f_hash]['f_paths'] = list(paths)  # remove duplicated paths just in case
+            paths = list(paths)  # remove duplicated paths just in case
+            paths.sort()
+            hashes[f_hash]['f_paths'] = paths
         else:
             hashes.update({f_hash: {'f_paths': [f_path]}})
 
@@ -372,30 +376,50 @@ class Hashes:
 
 class Duplicates:
 
-    def __init__(self):
+    def __init__(self, files=None):
         self.duplicates = {}
+        self.files = files if files else {}
+
+    def get_file_size(self, f_paths):
+        """
+        Try to get file size files dict or directly from OS. Because all files in list have equal size,
+        it's fine to size any of them.
+        :param f_paths:
+        :return: size of file
+        """
+        for f_path in f_paths:
+            if f_path in self.files.keys() and self.files[f_path]['f_size']:
+                return self.files[f_path]['f_size']
+
+        for f_path in f_paths:
+            f_size = Files.get_file_size(f_path)
+            if f_size:
+                return f_size
 
     def find_duplicates(self, hashes):
         duplicates = {}
+
         for f_hash, paths in hashes.items():
+
             if len(paths['f_paths'][1:]):
-                duplicates.update({f_hash: {'f_paths': paths['f_paths']}})
+                f_size = self.get_file_size(paths['f_paths'])
+                duplicates.update({f_hash: {'f_paths': paths['f_paths'], 'f_size': f_size}})
 
         self.duplicates = deepcopy(duplicates)
         return duplicates
 
 
 if __name__ == '__main__':
-    freeze_support()
-
-    finder = DuplicateFinder(top_directory=TARGET_DIR)
-    finder.get_files()
-    finder.get_hashes()
-    finder.find()
-    finder.show_duplicates()
-    finder.calculate_results()
-    finder.show_results()
-    finder.write_results_to_file()
+    # freeze_support()
+    #
+    # finder = DuplicateFinder(top_directory=TARGET_DIR)
+    # finder.get_files()
+    # finder.get_hashes()
+    # finder.find()
+    # finder.show_duplicates()
+    # finder.calculate_results()
+    # finder.show_results()
+    # finder.write_results_to_file()
 
     # debug
     files = Files(top_dir=TARGET_DIR)
