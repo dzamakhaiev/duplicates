@@ -447,10 +447,13 @@ class Duplicates:
         """
         Aggregate results of check in dict
         """
-        self.results.update({"Target directory": TARGET_DIR})
+        logger.debug(msg='Calculating results')
         self.results.update({"Files found": self.files.__len__()})
         self.results.update({"Files checked": self.hashes.__len__()})
         self.results.update({"Duplicates found": self.duplicates.__len__()})
+
+        self.results.update({"Target directory": self.args.path if self.args else TARGET_DIR})
+        self.results.update({"Algorithm": self.args.alg if self.args else DEFAULT_ALG})
 
     def show_results(self):
         """
