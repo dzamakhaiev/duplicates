@@ -427,6 +427,27 @@ class Duplicates:
             if f_size:
                 return f_size
 
+    def get_duplicates_size(self, duplicates=None):
+        """
+        Get size of all duplicated files and return it
+        """
+        if not duplicates:
+            duplicates = self.duplicates
+
+        duplicated_size = 0
+        for f_meta in duplicates.values():
+            f_paths, f_size = f_meta['f_paths'], f_meta['f_size']
+
+            if f_size:
+                duplicated_size += len(f_paths) * f_size
+            else:
+                f_size = self.get_file_size(f_paths[0])
+                duplicated_size += len(f_paths) * f_size if f_size else 0  # to prevent: len * None
+
+        degree = UNITS[self.args.unit.upper()][0] if self.args else UNITS[SIZE_UNIT][0]
+        duplicated_size = round(duplicated_size / (1024 ** degree), 2)
+        return duplicated_size
+
     def find_duplicates(self, hashes):
         logger.info(msg='Start finding equal files by hash')
         start = time.time()
@@ -451,6 +472,7 @@ class Duplicates:
         self.results.update({"Files found": self.files.__len__()})
         self.results.update({"Files checked": self.hashes.__len__()})
         self.results.update({"Duplicates found": self.duplicates.__len__()})
+        self.results.update({"Total size of duplicates": "{} {}".format(self.get_duplicates_size(), self.args.unit if self.args else SIZE_UNIT)})
 
         self.results.update({"Target directory": self.args.path if self.args else TARGET_DIR})
         self.results.update({"Algorithm": self.args.alg if self.args else DEFAULT_ALG})
