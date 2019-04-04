@@ -8,7 +8,6 @@ import time
 import json
 import logging
 import args
-from multiprocessing import Pool
 from collections import OrderedDict
 from copy import deepcopy
 
