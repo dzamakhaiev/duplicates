@@ -16,11 +16,13 @@ TARGET_DIR = r"C:\Program Files (x86)\Steam"
 BLOCK_SIZE = 65536
 MAX_FILES = 10000
 PROCESSES = 2
-SIZE_UNIT = "GB"
+SIZE_UNIT = "MB"
 RESULTS_FILE = "results.txt"
 LOG_FILE = "log.txt"
+QUIET = False
+VERBOSE = True
 DEFAULT_ALG = "sha1"
-UNITS = {"MB": (2, "megabytes"), "GB": (3, "gigabytes"), "TB":  (4, "terabytes")}
+UNITS = {"KB": (1, "kilobytes"), "MB": (2, "megabytes"), "GB": (3, "gigabytes"), "TB":  (4, "terabytes")}
 
 logger = logging.getLogger("main")
 logger.setLevel(logging.INFO)
@@ -366,17 +368,46 @@ class Duplicates:
         self.results.update({"Duplicates found": self.duplicates.__len__()})
         self.results.update({"Duplicates size": "{} {}".format(self.get_duplicates_size(), self.unit)})
         self.results.update({"Finding time": "{} sec".format(self.timing.get('Finding time', 0))})
-        self.results.update({"Total time": "{} sec".format(sum(self.timing.values()))})
+        self.results.update({"Total time": "{} sec".format(round(sum(self.timing.values()), 2))})
         self.results.update({"Algorithm": self.alg})
 
-    def show_results(self):
-        """
-        Show results in console
-        """
+    def show_results_in_console(self):
         logger.info(msg='Show results in console')
         for key, value in self.results.items():
             print("{}: {}".format(key, value))
             logger.debug(msg="{}: {}".format(key, value))
+
+    def show_duplicates_in_console(self):
+        logger.info(msg='Show duplicates in console')
+        for _, f_meta in self.duplicates.items():
+            print('=' * 50)
+            print('\n'.join([f_path for f_path in f_meta['f_paths']]))
+
+            f_size = f_meta['f_size']
+            f_size = round(f_size / (1024 ** self.degree), 2)
+            duplicated_size = (len(f_meta['f_paths']) - 1) * f_size
+            duplicated_size = round(duplicated_size, 2)
+            total_str = 'File size: {0} {2}. Total size of duplicated files: {1} {2}'
+            total_str = total_str.format(f_size, duplicated_size, self.unit)
+
+            print(total_str)
+            logger.debug(msg=total_str)
+
+    def show_results(self):
+        """
+        Show results in console if flags allow that
+        """
+        if self.args and not self.args.quiet:
+            self.show_results_in_console()
+
+        elif not self.args and not QUIET:
+            self.show_results_in_console()
+
+        if self.args and not self.args.quiet and self.args.verbose:
+            self.show_duplicates_in_console()
+
+        elif not self.args and not QUIET and VERBOSE:
+            self.show_duplicates_in_console()
 
     def write_results(self, results=None, results_file=None):
         """
