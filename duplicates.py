@@ -252,8 +252,7 @@ class DuplicateFinder:
 
 class Files:
 
-    def __init__(self, top_dir=TARGET_DIR, max_files=MAX_FILES, args=None):
-        self.args = args
+    def __init__(self, top_dir=TARGET_DIR, max_files=MAX_FILES):
         self.top_dir = top_dir
         self.max_files = max_files
         self.files = {}
@@ -348,7 +347,7 @@ class Files:
 
 class Hashes:
 
-    def __init__(self, alg=DEFAULT_ALG, args=None):
+    def __init__(self, alg=DEFAULT_ALG):
         self.args = args
         self.alg = alg
         self.hashing = 0
@@ -467,17 +466,17 @@ class Duplicates:
         """
         Try to get file size files dict or directly from OS. Because all files in list have equal size,
         it's fine to size any of them.
-        :param f_paths:
-        :return: size of file
         """
         for f_path in f_paths:
             if f_path in self.files.keys() and self.files[f_path]['f_size']:
                 return self.files[f_path]['f_size']
 
         for f_path in f_paths:
-            f_size = Files.get_file_size(f_path)
+            f_size = self.files_obj.get_file_size(f_path)
             if f_size:
                 return f_size
+
+        return 0
 
     def get_duplicates_size(self, duplicates=None):
         """
@@ -493,8 +492,7 @@ class Duplicates:
             if f_size:
                 duplicated_size += len(f_paths) * f_size
             else:
-                f_size = self.get_file_size(f_paths[0])
-                duplicated_size += len(f_paths) * f_size if f_size else 0  # to prevent: len * None
+                duplicated_size += len(f_paths) * self.get_file_size(f_paths[0])
 
         degree = UNITS[self.args.unit.upper()][0] if self.args else UNITS[SIZE_UNIT][0]
         duplicated_size = round(duplicated_size / (1024 ** degree), 2)
