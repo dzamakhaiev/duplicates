@@ -25,7 +25,11 @@ UNITS = {"MB": (2, "megabytes"), "GB": (3, "gigabytes"), "TB":  (4, "terabytes")
 
 logger = logging.getLogger("main")
 logger.setLevel(logging.INFO)
-handler = logging.FileHandler("log.txt")
+if len(sys.argv) > 1:
+    USER_ARGS = args.parser.parse_args()
+    handler = logging.FileHandler(USER_ARGS.log)
+else:
+    handler = logging.FileHandler(LOG_FILE)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
