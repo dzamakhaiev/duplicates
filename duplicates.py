@@ -255,10 +255,6 @@ class Files:
     def __init__(self, top_dir=TARGET_DIR, max_files=MAX_FILES):
         self.top_dir = top_dir
         self.max_files = max_files
-        self.files = {}
-        self.file_sizes = 0
-        self.scanning = 0
-        self.finding = 0
 
     def find(self, top=None, max_files=None):
         """
@@ -272,8 +268,6 @@ class Files:
         if not max_files:
             max_files = self.max_files
 
-        logger.info(msg='Start scanning the directory: {}'.format(top))
-        start = time.time()
         files = {}
         counter = 0
 
@@ -292,21 +286,12 @@ class Files:
         except (OSError, PermissionError) as e:
             logger.error(msg=e)
 
-        logger.info(msg='Complete scanning the directory')
-        self.scanning = round(time.time() - start, 1)
-        self.files = deepcopy(files)  # save dict in self for further use and protect from possible changes
         return files
 
-    def find_equal_files(self, files=None):
+    def find_equal_files(self, files):
         """
         Get list of files with equal size
         """
-        logger.info(msg='Start finding equal files by size')
-        start = time.time()
-
-        if not files:
-            files = self.files
-
         equal_files = []
         file_sizes = self.get_files_sizes(files)
 
@@ -314,8 +299,6 @@ class Files:
             if f_meta and f_meta.get('f_size') and file_sizes.count(f_meta['f_size']) > 1:
                 equal_files.append(f_path)
 
-        logger.info(msg='Complete finding equal files')
-        self.finding = round(time.time() - start, 1)
         equal_files.sort()
         return equal_files
 
@@ -327,19 +310,15 @@ class Files:
             logger.error(msg=e)
             return None
 
-    def get_files_sizes(self, files):
+    @staticmethod
+    def get_files_sizes(files):
         """
         Get list with sizes of all checked files
         """
-        if not files:
-            files = self.files
-
         file_sizes = []
         for f_meta in files.values():
             if f_meta and f_meta.get("f_size"):
                 file_sizes.append(int(f_meta["f_size"]))
-
-        self.file_sizes = deepcopy(file_sizes)
 
         file_sizes.sort()
         return file_sizes
@@ -348,9 +327,7 @@ class Files:
 class Hashes:
 
     def __init__(self, alg=DEFAULT_ALG):
-        self.args = args
         self.alg = alg
-        self.hashing = 0
 
     def get_hash_of_file(self, f_path, alg=None):
         """
@@ -387,16 +364,12 @@ class Hashes:
             hashes.update({f_hash: {'f_paths': [f_path]}})
 
     def calculate_hashes(self, equal_files):
-        logger.info(msg='Start calculating hashes')
-        start = time.time()
         hashes = {}
 
         for f_path in equal_files:
             f_hash = self.get_hash_of_file(f_path)
             self.add_hash(hashes=hashes, f_hash=f_hash, f_path=f_path)
 
-        logger.info(msg='Complete calculating hashes')
-        self.hashing = round(time.time() - start, 1)
         return hashes
 
 
@@ -411,10 +384,10 @@ class Duplicates:
         self.equal_files = []
         self.hashes = {}
         self.duplicates = {}
-        self.results = {}
+        self.results = OrderedDict()
 
         # Init time measuring var
-        self.finding = 0
+        self.timing = {}
 
         # Create and init Files object
         top_dir = self.args.path if self.args else TARGET_DIR
@@ -430,10 +403,17 @@ class Duplicates:
         Find all files in target directory using Files object.
         Keep passing vars and returning for unit tests
         """
+        logger.info(msg='Start scanning the directory: {}'.format(self.args.path if self.args else TARGET_DIR))
+        start = time.time()
+
         if not top_dir or not max_files:
             files = self.files_obj.find()
         else:
             files = self.files_obj.find(top=top_dir, max_files=max_files)
+
+        logger.info(msg='Complete scanning the directory')
+        duration = round(time.time() - start, 1)
+        self.timing['Scanning time'] = duration
 
         self.files = deepcopy(files)
         return files
@@ -446,7 +426,15 @@ class Duplicates:
         if not files:
             files = self.files
 
+        logger.info(msg='Start checking found files for equal size')
+        start = time.time()
+
         equal_files = self.files_obj.find_equal_files(files=files)
+
+        logger.info(msg='Complete checking found files')
+        duration = round(time.time() - start, 1)
+        self.timing['Checking time'] = duration
+
         self.equal_files = equal_files.copy()
         return equal_files
 
@@ -455,12 +443,41 @@ class Duplicates:
         Get hashes for all found equal files(using Hashes object) and store it.
         Keep passing vars and returning for unit tests
         """
+        logger.info(msg='Start calculating hashes')
+        start = time.time()
+
         if not equal_files:
             equal_files = self.equal_files
 
         hashes = self.hashes_obj.calculate_hashes(equal_files=equal_files)
+
+        logger.info(msg='Complete calculating hashes')
+        duration = round(time.time() - start, 1)
+        self.timing['Calculating time'] = duration
+
         self.hashes = deepcopy(hashes)
         return hashes
+
+    def find_duplicates(self, hashes=None):
+        logger.info(msg='Start finding equal files by hash')
+        start = time.time()
+
+        if not hashes:
+            hashes = self.hashes
+        duplicates = {}
+
+        for f_hash, paths in hashes.items():
+
+            if len(paths['f_paths'][1:]):
+                f_size = self.get_file_size(paths['f_paths'])
+                duplicates.update({f_hash: {'f_paths': paths['f_paths'], 'f_size': f_size}})
+
+        logger.info(msg='Complete finding equal files')
+        duration = round(time.time() - start, 1)
+        self.timing['Finding time'] = duration
+
+        self.duplicates = deepcopy(duplicates)
+        return duplicates
 
     def get_file_size(self, f_paths):
         """
@@ -498,37 +515,21 @@ class Duplicates:
         duplicated_size = round(duplicated_size / (1024 ** degree), 2)
         return duplicated_size
 
-    def find_duplicates(self, hashes=None):
-        logger.info(msg='Start finding equal files by hash')
-        start = time.time()
-
-        if not hashes:
-            hashes = self.hashes
-        duplicates = {}
-
-        for f_hash, paths in hashes.items():
-
-            if len(paths['f_paths'][1:]):
-                f_size = self.get_file_size(paths['f_paths'])
-                duplicates.update({f_hash: {'f_paths': paths['f_paths'], 'f_size': f_size}})
-
-        logger.info(msg='Complete finding equal files')
-        self.finding = round(time.time() - start, 1)
-        self.duplicates = deepcopy(duplicates)
-        return duplicates
-
     def calculate_results(self):
         """
         Aggregate results of check in dict
         """
         logger.debug(msg='Calculating results')
+        unit = self.args.unit if self.args else SIZE_UNIT
+        directory = self.args.path if self.args else TARGET_DIR
+        alg = self.args.alg if self.args else DEFAULT_ALG
+
+        self.results.update({"Target directory": directory})
         self.results.update({"Files found": self.files.__len__()})
         self.results.update({"Files checked": self.hashes.__len__()})
         self.results.update({"Duplicates found": self.duplicates.__len__()})
-        self.results.update({"Total size of duplicates": "{} {}".format(self.get_duplicates_size(), self.args.unit if self.args else SIZE_UNIT)})
-
-        self.results.update({"Target directory": self.args.path if self.args else TARGET_DIR})
-        self.results.update({"Algorithm": self.args.alg if self.args else DEFAULT_ALG})
+        self.results.update({"Total size of duplicates": "{} {}".format(self.get_duplicates_size(), unit)})
+        self.results.update({"Algorithm": alg})
 
     def show_results(self):
         """
