@@ -323,6 +323,19 @@ class Files:
         file_sizes.sort()
         return file_sizes
 
+    @staticmethod
+    def write_dict_to_file(results, filename):
+        """
+        Write dictionary with results to output file
+        """
+        try:
+            with open(filename, 'a+') as results_file:
+                json.dump(results, results_file)
+                results_file.write("\n")
+
+        except (OSError, PermissionError) as e:
+            logger.info(msg=e)
+
 
 class Hashes:
 
@@ -574,6 +587,18 @@ class Duplicates:
             print("{}: {}".format(key, value))
             logger.debug(msg="{}: {}".format(key, value))
 
+    def write_results(self, results=None, results_file=None):
+        """
+        Write results dict to output file
+        """
+        if not results:
+            results = self.results
+
+        if not results_file:
+            results_file = self.args.output if self.args else RESULTS_FILE
+
+        self.files_obj.write_dict_to_file(results=results, filename=results_file)
+
 
 if __name__ == '__main__':
 
@@ -591,3 +616,4 @@ if __name__ == '__main__':
     duplicates_obj.find_duplicates()
     duplicates_obj.calculate_results()
     duplicates_obj.show_results()
+    duplicates_obj.write_results()
