@@ -43,9 +43,6 @@ class Files:
     def find(self, top=None, max_files=None):
         """
         Find all files in directory. Limited by max_files
-        :param top:
-        :param max_files:
-        :return:
         """
         if not top:
             top = self.top_dir
@@ -94,7 +91,7 @@ class Files:
             return os.path.getsize(f_path)
         except OSError as e:
             logger.error(msg=e)
-            return None
+            return 0
 
     @staticmethod
     def get_files_sizes(files):
@@ -134,7 +131,7 @@ class Hashes:
         """
         if not alg:
             alg = self.alg
-        hasher = getattr(hashlib, alg, hashlib.sha1())()
+        hasher = getattr(hashlib, alg, hashlib.sha1)()
 
         try:
             with open(f_path, 'rb') as f_file:
@@ -149,20 +146,21 @@ class Hashes:
     @staticmethod
     def add_hash(hashes, f_hash, f_path):
         """
-        :param dict hashes:
-        :param str f_hash:
-        :param str f_path:
+        Add hash in dict. If it exists - add new path to this hash
         """
         if f_hash in hashes:
             hashes[f_hash]['f_paths'].append(f_path)
-            paths = set(hashes[f_hash]['f_paths'])
-            paths = list(paths)  # remove duplicated paths just in case
+            paths = set(hashes[f_hash]['f_paths'])  # remove duplicated paths just in case
+            paths = list(paths)
             paths.sort()
             hashes[f_hash]['f_paths'] = paths
         else:
             hashes.update({f_hash: {'f_paths': [f_path]}})
 
     def calculate_hashes(self, equal_files):
+        """
+        Calculate hashes for all files in list
+        """
         hashes = {}
 
         for f_path in equal_files:
@@ -264,6 +262,10 @@ class Duplicates:
         return hashes
 
     def find_duplicates(self, hashes=None):
+        """
+        Find duplicates in hashes dict. Duplicated hash has more than one file path.
+        Keep passing vars and returning for unit tests
+        """
         logger.info(msg='Start finding equal files by hash')
         start = time.time()
 
@@ -302,7 +304,8 @@ class Duplicates:
 
     def get_scanned_size(self, files=None):
         """
-        Get size of all scanned files in target directory
+        Get size of all scanned files in target directory.
+        Keep passing vars and returning for unit tests
         """
         if not files:
             files = self.files
@@ -313,7 +316,8 @@ class Duplicates:
 
     def get_hashed_size(self, hashes=None):
         """
-        Get size of all hashed files
+        Get size of all hashed files.
+        Keep passing vars and returning for unit tests
         """
         if not hashes:
             hashes = self.hashes
@@ -328,15 +332,16 @@ class Duplicates:
 
     def get_duplicates_size(self, duplicates=None):
         """
-        Get size of all duplicated files
+        Get size of all duplicated files.
+        Keep passing vars and returning for unit tests
         """
         if not duplicates:
             duplicates = self.duplicates
 
         duplicated_size = 0
         for f_meta in duplicates.values():
-            f_paths, f_size = f_meta['f_paths'], f_meta['f_size']
 
+            f_paths, f_size = f_meta['f_paths'], f_meta['f_size']
             if f_size:
                 duplicated_size += (len(f_paths) - 1) * f_size
             else:
