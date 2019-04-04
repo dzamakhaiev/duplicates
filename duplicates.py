@@ -403,13 +403,65 @@ class Hashes:
 
 class Duplicates:
 
-    def __init__(self, files=None, hashes=None, args=None):
+    def __init__(self, args=None):
+        # Store console args
         self.args = args
+
+        # Init main instances
+        self.files = {}
+        self.equal_files = []
+        self.hashes = {}
         self.duplicates = {}
         self.results = {}
-        self.files = files if files else {}
-        self.hashes = hashes if hashes else {}
+
+        # Init time measuring var
         self.finding = 0
+
+        # Create and init Files object
+        top_dir = self.args.path if self.args else TARGET_DIR
+        max_files = self.args.max if self.args else MAX_FILES
+        self.files_obj = Files(top_dir=top_dir, max_files=max_files)
+
+        # Create and init Hashes object
+        alg = self.args.alg if self.args else DEFAULT_ALG
+        self.hashes_obj = Hashes(alg=alg)
+
+    def find_all_files(self, top_dir=None, max_files=None):
+        """
+        Find all files in target directory using Files object.
+        Keep passing vars and returning for unit tests
+        """
+        if not top_dir or not max_files:
+            files = self.files_obj.find()
+        else:
+            files = self.files_obj.find(top=top_dir, max_files=max_files)
+
+        self.files = deepcopy(files)
+        return files
+
+    def check_all_files(self, files=None):
+        """
+        Check all found files(using Files object) and store all equal files by size.
+        Keep passing vars and returning for unit tests
+        """
+        if not files:
+            files = self.files
+
+        equal_files = self.files_obj.find_equal_files(files=files)
+        self.equal_files = equal_files.copy()
+        return equal_files
+
+    def get_files_hashes(self, equal_files=None):
+        """
+        Get hashes for all found equal files(using Hashes object) and store it.
+        Keep passing vars and returning for unit tests
+        """
+        if not equal_files:
+            equal_files = self.equal_files
+
+        hashes = self.hashes_obj.calculate_hashes(equal_files=equal_files)
+        self.hashes = deepcopy(hashes)
+        return hashes
 
     def get_file_size(self, f_paths):
         """
@@ -448,9 +500,12 @@ class Duplicates:
         duplicated_size = round(duplicated_size / (1024 ** degree), 2)
         return duplicated_size
 
-    def find_duplicates(self, hashes):
+    def find_duplicates(self, hashes=None):
         logger.info(msg='Start finding equal files by hash')
         start = time.time()
+
+        if not hashes:
+            hashes = self.hashes
         duplicates = {}
 
         for f_hash, paths in hashes.items():
@@ -491,23 +546,15 @@ if __name__ == '__main__':
 
     # user mode
     if len(sys.argv) > 1:
-        files = Files(top_dir=TARGET_DIR, args=args.parser.parse_args())
-        f = files.find()
-        e = files.find_equal_files(files=f)
-        hashes = Hashes(args=args.parser.parse_args())
-        h = hashes.calculate_hashes(equal_files=e)
-        duplicates = Duplicates(hashes=h, files=f, args=args.parser.parse_args())
-        d = duplicates.find_duplicates(hashes=h)
+        duplicates_obj = Duplicates(args=args.parser.parse_args())
 
     # debug mode
     else:
-        files = Files(top_dir=TARGET_DIR)
-        f = files.find()
-        e = files.find_equal_files(files=f)
-        hashes = Hashes()
-        h = hashes.calculate_hashes(equal_files=e)
-        duplicates = Duplicates(hashes=h, files=f)
-        d = duplicates.find_duplicates(hashes=h)
+        duplicates_obj = Duplicates()
 
-    duplicates.calculate_results()
-    duplicates.show_results()
+    duplicates_obj.find_all_files()
+    duplicates_obj.check_all_files()
+    duplicates_obj.get_files_hashes()
+    duplicates_obj.find_duplicates()
+    duplicates_obj.calculate_results()
+    duplicates_obj.show_results()
