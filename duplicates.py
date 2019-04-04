@@ -389,13 +389,19 @@ class Duplicates:
         # Init time measuring var
         self.timing = {}
 
+        # Set up unit of measuring
+        self.unit = self.args.unit if self.args else SIZE_UNIT
+        self.degree = UNITS[self.args.unit.upper()][0] if self.args else UNITS[SIZE_UNIT][0]
+
         # Create and init Files object
         top_dir = self.args.path if self.args else TARGET_DIR
         max_files = self.args.max if self.args else MAX_FILES
+        self.top_dir = top_dir
         self.files_obj = Files(top_dir=top_dir, max_files=max_files)
 
         # Create and init Hashes object
         alg = self.args.alg if self.args else DEFAULT_ALG
+        self.alg = alg
         self.hashes_obj = Hashes(alg=alg)
 
     def find_all_files(self, top_dir=None, max_files=None):
@@ -495,9 +501,35 @@ class Duplicates:
 
         return 0
 
+    def get_scanned_size(self, files=None):
+        """
+        Get size of all scanned files in target directory
+        """
+        if not files:
+            files = self.files
+
+        scanned_size = sum([int(f_meta.get('f_size')) for f_meta in files.values() if f_meta.get('f_size')])
+        scanned_size = round(scanned_size / (1024 ** self.degree), 2)
+        return scanned_size
+
+    def get_hashed_size(self, hashes=None):
+        """
+        Get size of all hashed files
+        """
+        if not hashes:
+            hashes = self.hashes
+
+        hashed_size = 0
+        for h_meta in hashes.values():
+            f_size = self.get_file_size(f_paths=h_meta['f_paths'])
+            hashed_size += len(h_meta['f_paths']) * f_size
+
+        hashed_size = round(hashed_size / (1024 ** self.degree), 2)
+        return hashed_size
+
     def get_duplicates_size(self, duplicates=None):
         """
-        Get size of all duplicated files and return it
+        Get size of all duplicated files
         """
         if not duplicates:
             duplicates = self.duplicates
@@ -507,12 +539,11 @@ class Duplicates:
             f_paths, f_size = f_meta['f_paths'], f_meta['f_size']
 
             if f_size:
-                duplicated_size += len(f_paths) * f_size
+                duplicated_size += (len(f_paths) - 1) * f_size
             else:
-                duplicated_size += len(f_paths) * self.get_file_size(f_paths[0])
+                duplicated_size += (len(f_paths) - 1) * self.get_file_size(f_paths[0])
 
-        degree = UNITS[self.args.unit.upper()][0] if self.args else UNITS[SIZE_UNIT][0]
-        duplicated_size = round(duplicated_size / (1024 ** degree), 2)
+        duplicated_size = round(duplicated_size / (1024 ** self.degree), 2)
         return duplicated_size
 
     def calculate_results(self):
@@ -520,16 +551,14 @@ class Duplicates:
         Aggregate results of check in dict
         """
         logger.debug(msg='Calculating results')
-        unit = self.args.unit if self.args else SIZE_UNIT
-        directory = self.args.path if self.args else TARGET_DIR
-        alg = self.args.alg if self.args else DEFAULT_ALG
-
-        self.results.update({"Target directory": directory})
+        self.results.update({"Target directory": self.top_dir})
         self.results.update({"Files found": self.files.__len__()})
-        self.results.update({"Files checked": self.hashes.__len__()})
+        self.results.update({"Scanned files size": "{} {}".format(self.get_scanned_size(), self.unit)})
+        self.results.update({"Files hashed": self.hashes.__len__()})
+        self.results.update({"Hashed files size": "{} {}".format(self.get_hashed_size(), self.unit)})
         self.results.update({"Duplicates found": self.duplicates.__len__()})
-        self.results.update({"Total size of duplicates": "{} {}".format(self.get_duplicates_size(), unit)})
-        self.results.update({"Algorithm": alg})
+        self.results.update({"Duplicates size": "{} {}".format(self.get_duplicates_size(), self.unit)})
+        self.results.update({"Algorithm": self.alg})
 
     def show_results(self):
         """
