@@ -62,8 +62,10 @@ class Files:
                 # Collect found files to dict and save file size
                 for f in included_files:
                     f_path = os.path.join(current_dir, f)
-                    files.update({f_path: {"f_size": self.get_file_size(f_path)}})
-                    counter += 1
+
+                    if os.path.isfile(f_path):
+                        files.update({f_path: {"f_size": self.get_file_size(f_path)}})
+                        counter += 1
 
                 if counter > max_files: break
 
