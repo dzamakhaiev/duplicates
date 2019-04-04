@@ -459,7 +459,7 @@ class Duplicates:
 
         logger.info(msg='Complete calculating hashes')
         duration = round(time.time() - start, 1)
-        self.timing['Calculating time'] = duration
+        self.timing['Hashing time'] = duration
 
         self.hashes = deepcopy(hashes)
         return hashes
@@ -554,10 +554,15 @@ class Duplicates:
         self.results.update({"Target directory": self.top_dir})
         self.results.update({"Files found": self.files.__len__()})
         self.results.update({"Scanned files size": "{} {}".format(self.get_scanned_size(), self.unit)})
+        self.results.update({"Scanning time": "{} sec".format(self.timing.get('Scanning time', 0))})
+        self.results.update({"Checking time": "{} sec".format(self.timing.get('Checking time', 0))})
         self.results.update({"Files hashed": self.hashes.__len__()})
         self.results.update({"Hashed files size": "{} {}".format(self.get_hashed_size(), self.unit)})
+        self.results.update({"Hashing time": "{} sec".format(self.timing.get('Hashing time', 0))})
         self.results.update({"Duplicates found": self.duplicates.__len__()})
         self.results.update({"Duplicates size": "{} {}".format(self.get_duplicates_size(), self.unit)})
+        self.results.update({"Finding time": "{} sec".format(self.timing.get('Finding time', 0))})
+        self.results.update({"Total time": "{} sec".format(sum(self.timing.values()))})
         self.results.update({"Algorithm": self.alg})
 
     def show_results(self):
