@@ -1,12 +1,38 @@
+import os
 import unittest
 import duplicates
+import file_handler
+
 from test_input import EQUALITY_CHECK
 from test_input import SIZE_CHECK
 from test_input import HASH_CHECK
 from test_input import DUPLICATES_CHECK
+from test_input import FIND_CHECK
+from test_input import TEST_DIR
 
 
-class UnitFiles(unittest.TestCase):
+class Unit(unittest.TestCase):
+
+    @staticmethod
+    def create_file_structure(input_dict):
+        # Create test dir
+        file_handler.create_dir(TEST_DIR)
+        old_dir = os.getcwd()
+        test_dir = os.path.join(old_dir, TEST_DIR)
+        os.chdir(test_dir)
+
+        # Create file structure in current directory for test find method
+        file_handler.create_file_structure(file_structure=input_dict)
+        return old_dir, test_dir
+
+    @staticmethod
+    def delete_file_structure(old_dir, test_dir):
+        # Clean up
+        os.chdir(old_dir)
+        file_handler.delete_dir_recursively(test_dir)
+
+
+class UnitFiles(Unit):
 
     def setUp(self):
         self.files_instance = duplicates.Files()
@@ -27,7 +53,7 @@ class UnitFiles(unittest.TestCase):
 
     def test_find_equal_files(self):
         """
-        Check find_equal_files method. This method checks dict with files {file path: {file size, etc}}
+        Check find_equal_files method of Files class. This method checks dict with files {file path: {file size, etc}}
         and returns list with equal files compared by size.
         If no such files - returns empty list.
         """
@@ -41,8 +67,25 @@ class UnitFiles(unittest.TestCase):
                 else:
                     self.assertEqual(expected, result)
 
+    def test_find(self):
+        """
+        Check find method of Files class. This method walks recursively in directory and
+        collects all found files in dict. Returns dict with files and sizes.
+        """
+        for desc, input_dict, expected in FIND_CHECK:
+            with self.subTest(msg=desc):
 
-class UnitHashes(unittest.TestCase):
+                # Create file structure in current directory for test find method
+                old_dir, test_dir = self.create_file_structure(input_dict=input_dict)
+                result = self.files_instance.find(top=test_dir)
+
+                # Clean up
+                self.delete_file_structure(old_dir, test_dir)
+
+                self.assertEqual(result, expected)
+
+
+class UnitHashes(Unit):
 
     def setUp(self):
         self.hashes_instance = duplicates.Hashes()
@@ -59,7 +102,7 @@ class UnitHashes(unittest.TestCase):
                 self.assertEqual(expected, input_dict)
 
 
-class UnitDuplicates(unittest.TestCase):
+class UnitDuplicates(Unit):
 
     def setUp(self):
         self.duplicates_instance = duplicates.Duplicates()
