@@ -1,5 +1,6 @@
 import os
 import shutil
+import random
 
 
 def create_file(filename, n_bytes=1000):
@@ -14,6 +15,27 @@ def create_file(filename, n_bytes=1000):
         print(e)
 
 
+def create_files(filename, n=5, n_bytes=1000, random_size=False):
+    """
+    Create n files with same/random size
+    :param str filename:
+    :param int n: number of files
+    :param int n_bytes: file size
+    :param bool random_size: random size of file
+    :return: list of created files
+    """
+    files = []
+
+    for i in range(1, n + 1):
+        name, ext = filename.split('.')
+        name += '_{}.{}'.format(i, ext)
+        files.append(name)
+        size = random.randint(1, n_bytes) if random_size else n_bytes
+        create_file(filename=name, n_bytes=size)
+
+    return files
+
+
 def copy_file(filename, n=1):
     """
     Copy exists file with +1 int the name, starting from 1.
@@ -26,7 +48,7 @@ def copy_file(filename, n=1):
     last_index = -5
     digit = int(filename[last_index]) + 1 if str.isdigit(filename[last_index]) else 1
 
-    for i in range(n):
+    for _ in range(n):
 
         # first time in loop and first copy
         if not new_name and digit == 1:
