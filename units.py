@@ -96,7 +96,7 @@ class UnitHashes(Unit):
         Check get_hash_of_file in Hashes class. This method get hash of file or return None in case of error.
         Method could use various hashing protocols.
         """
-        filename = 'file_for_hashing.txt'
+        filename = 'file_for_hashing.bin'
 
         for desc, alg in HASHING_CHECK:
             with self.subTest(msg=desc):
@@ -119,6 +119,41 @@ class UnitHashes(Unit):
 
                 self.hashes_instance.add_hash(hashes=input_dict, f_hash=f_hash, f_path=f_path)
                 self.assertEqual(expected, input_dict)
+
+    def test_calculate_hashes(self):
+        """
+        Check calculate_hashes method in Hashes class.
+        It calculates hashes for list of files and returns their hashes.
+        """
+        test_file = 'test.bin'
+
+        with self.subTest(msg='Test identical files'):
+            number_of_copies = 4
+
+            # create new file and copy it n times
+            file_handler.create_file(test_file)
+            copies = file_handler.copy_file(test_file, number_of_copies)
+            copies.append(test_file)
+
+            hashes = self.hashes_instance.calculate_hashes(equal_files=copies)
+            file_handler.delete_list_of_files(copies)
+            exp_hashes = 1
+            self.assertEqual(len(hashes), exp_hashes, msg='Should be only one hash for equal files')
+
+        with self.subTest(msg='Test diff files'):
+            number_of_files = 5
+
+            # create new files with diff size
+            files = file_handler.create_files(filename=test_file, n=number_of_files, random_size=True)
+
+            hashes = self.hashes_instance.calculate_hashes(equal_files=files)
+            file_handler.delete_list_of_files(files)
+
+            self.assertEqual(len(hashes), number_of_files, msg='Number of hashes should be equal to number of files')
+
+        # test empty list
+        hashes = self.hashes_instance.calculate_hashes(equal_files=[])
+        self.assertEqual(len(hashes), len([]), msg='Test empty list of hashes and files')
 
 
 class UnitDuplicates(Unit):
