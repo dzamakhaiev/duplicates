@@ -50,3 +50,9 @@ FIND_CHECK = [
       os.path.join(test_dir, 'dir0', 'file1.txt'): {'f_size': 1000},
       os.path.join(test_dir, 'dir0', 'file2.txt'): {'f_size': 1000}})
 ]
+
+# test description, hashing algorithm
+HASHING_CHECK = [
+    ('Check that method will return hash of file', 'MD5'),
+    ('Check that method will return hash of file even if hash type is incorrect', 'BFG')
+]

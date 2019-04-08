@@ -5,10 +5,11 @@ import file_handler
 
 from test_input import EQUALITY_CHECK
 from test_input import SIZE_CHECK
-from test_input import HASH_CHECK
 from test_input import DUPLICATES_CHECK
 from test_input import FIND_CHECK
 from test_input import TEST_DIR
+from test_input import HASH_CHECK
+from test_input import HASHING_CHECK
 
 
 class Unit(unittest.TestCase):
@@ -89,6 +90,24 @@ class UnitHashes(Unit):
 
     def setUp(self):
         self.hashes_instance = duplicates.Hashes()
+
+    def test_get_hash(self):
+        """
+        Check get_hash_of_file in Hashes class. This method get hash of file or return None in case of error.
+        Method could use various hashing protocols.
+        """
+        filename = 'file_for_hashing.txt'
+
+        for desc, alg in HASHING_CHECK:
+            with self.subTest(msg=desc):
+                file_handler.create_file(filename)
+                result = self.hashes_instance.get_hash_of_file(f_path=filename)
+                file_handler.delete_file(filename)
+                self.assertTrue(result, msg='Hash should not be None')
+
+        # Try to get hash of deleted file
+        result = self.hashes_instance.get_hash_of_file(f_path=filename)
+        self.assertFalse(result, msg='Hash should be None')
 
     def test_add_hash(self):
         """
