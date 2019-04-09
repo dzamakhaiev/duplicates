@@ -66,8 +66,8 @@ class Files:
                         files.update({f_path: {"f_size": self.get_file_size(f_path)}})
                         counter += 1
 
-                    if counter > max_files: break
-                if counter > max_files: break
+                    if counter >= max_files: break
+                if counter >= max_files: break
 
         except (OSError, PermissionError) as e:
             logger.error(msg=e)
