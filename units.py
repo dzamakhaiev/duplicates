@@ -181,6 +181,21 @@ class UnitDuplicates(Unit):
         # check len of dict
         self.assertEqual(len(result), max_files)
 
+    def test_check_all_files(self):
+        """
+        Check check_all_files method in Duplicates class. This method check dict with files
+        to find equal files by size.
+        """
+        for desc, input_dict, expected in EQUALITY_CHECK:
+            with self.subTest(msg=desc):
+                results = self.duplicates_instance.check_all_files(files=input_dict)
+
+                if isinstance(expected, bool):
+                    exp_len = 2
+                    self.assertEqual(len(results), exp_len)
+                else:
+                    self.assertEqual(len(results), len(expected))
+
     def test_find_duplicates(self):
         """
         Check find_duplicates method. This method find duplicated files by its hashes.
