@@ -10,7 +10,8 @@ EQUALITY_CHECK = [
     ('Test dict with not equal files', {'test_path_0': {'f_size': 123}, 'test_path_1': {'f_size': 321}}, []),
     ('Test dict with empty file size', {'test_path_0': {'f_size': 123}, 'test_path_1': {'f_size': None}}, []),
     ('Test dict with empty meta dict', {'test_path_0': {'f_size': 123}, 'test_path_1': {}}, []),
-    ('Test empty dict', {}, [])]
+    ('Test empty dict', {}, [])
+]
 
 # test description, input dict, expected result
 SIZE_CHECK = [
