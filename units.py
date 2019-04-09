@@ -161,6 +161,26 @@ class UnitDuplicates(Unit):
     def setUp(self):
         self.duplicates_instance = duplicates.Duplicates()
 
+    def test_find_all_files(self):
+        """
+        Check find_all_files method in Duplicates class. This method try to find all files in
+        top directory and collect in dictionary. Dict limited by max_files var.
+        """
+        # create test top dir and change current dir
+        file_handler.create_dir(TEST_DIR)
+        old_dir = os.getcwd()
+        top_dir = os.path.join(old_dir, TEST_DIR)
+        os.chdir(top_dir)
+
+        # create test files in current dir
+        max_files = 5
+        file_handler.create_files(filename='test.bin', n=max_files*2)
+        result = self.duplicates_instance.find_all_files(top_dir=top_dir, max_files=max_files)
+        self.delete_file_structure(old_dir=old_dir, test_dir=top_dir)
+
+        # check len of dict
+        self.assertEqual(len(result), max_files)
+
     def test_find_duplicates(self):
         """
         Check find_duplicates method. This method find duplicated files by its hashes.
