@@ -197,6 +197,21 @@ class UnitDuplicates(Unit):
                 else:
                     self.assertEqual(len(results), len(expected))
 
+    def test_get_files_hashes(self):
+        """
+        Check get_files_hashes method in Duplicates class. This method delegates
+        calculating hashes task to Hashes class.
+        """
+        number_of_files = 5
+
+        # create new files with diff size
+        files = file_handler.create_files(filename=TEST_FILE, n=number_of_files, random_size=True)
+
+        hashes = self.duplicates_instance.get_files_hashes(equal_files=files)
+        file_handler.delete_list_of_files(files)
+
+        self.assertEqual(len(hashes), number_of_files, msg='Number of hashes should be equal to number of files')
+
     def test_find_duplicates(self):
         """
         Check find_duplicates method. This method find duplicated files by its hashes.
