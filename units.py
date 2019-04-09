@@ -225,6 +225,31 @@ class UnitDuplicates(Unit):
                 result = self.duplicates_instance.find_duplicates(hashes=input_dict)
                 self.assertEqual(expected, result)
 
+    def test_get_file_size(self):
+        """
+        Check get_file_size method in Duplicates class. This method try to get file size from
+        internal dict 'files', or directly from drive, or return 0 bytes.
+        """
+        with self.subTest(msg='Using data from internal dict in self'):
+            # add in self.files test file
+            exp_size = 1000
+            self.duplicates_instance.files.update({TEST_FILE: {'f_size': exp_size}})
+            size = self.duplicates_instance.get_file_size([TEST_FILE])
+            self.duplicates_instance.files.pop(TEST_FILE)
+            self.assertEqual(size, exp_size)
+
+        with self.subTest(msg='Using data directly from drive'):
+            # add in self.files test file
+            exp_size = 2000
+            file_handler.create_file(filename=TEST_FILE, n_bytes=exp_size)
+            size = self.duplicates_instance.get_file_size([TEST_FILE])
+            file_handler.delete_file(TEST_FILE)
+            self.assertEqual(size, exp_size)
+
+        exp_size = 0
+        size = self.duplicates_instance.get_file_size([TEST_FILE])
+        self.assertEqual(size, exp_size)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
