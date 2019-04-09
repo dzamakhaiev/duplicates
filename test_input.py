@@ -2,6 +2,7 @@ import os
 
 
 TEST_DIR = r'test_dir'
+TEST_FILE = r'test.bin'
 
 
 # test description, input dict, expected result

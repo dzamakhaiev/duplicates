@@ -3,11 +3,13 @@ import unittest
 import duplicates
 import file_handler
 
+
+from test_input import TEST_DIR
+from test_input import TEST_FILE
 from test_input import EQUALITY_CHECK
 from test_input import SIZE_CHECK
 from test_input import DUPLICATES_CHECK
 from test_input import FIND_CHECK
-from test_input import TEST_DIR
 from test_input import HASH_CHECK
 from test_input import HASHING_CHECK
 
@@ -125,15 +127,14 @@ class UnitHashes(Unit):
         Check calculate_hashes method in Hashes class.
         It calculates hashes for list of files and returns their hashes.
         """
-        test_file = 'test.bin'
 
         with self.subTest(msg='Test identical files'):
             number_of_copies = 4
 
             # create new file and copy it n times
-            file_handler.create_file(test_file)
-            copies = file_handler.copy_file(test_file, number_of_copies)
-            copies.append(test_file)
+            file_handler.create_file(TEST_FILE)
+            copies = file_handler.copy_file(TEST_FILE, number_of_copies)
+            copies.append(TEST_FILE)
 
             hashes = self.hashes_instance.calculate_hashes(equal_files=copies)
             file_handler.delete_list_of_files(copies)
@@ -144,7 +145,7 @@ class UnitHashes(Unit):
             number_of_files = 5
 
             # create new files with diff size
-            files = file_handler.create_files(filename=test_file, n=number_of_files, random_size=True)
+            files = file_handler.create_files(filename=TEST_FILE, n=number_of_files, random_size=True)
 
             hashes = self.hashes_instance.calculate_hashes(equal_files=files)
             file_handler.delete_list_of_files(files)
@@ -174,7 +175,7 @@ class UnitDuplicates(Unit):
 
         # create test files in current dir
         max_files = 5
-        file_handler.create_files(filename='test.bin', n=max_files*2)
+        file_handler.create_files(filename=TEST_FILE, n=max_files*2)
         result = self.duplicates_instance.find_all_files(top_dir=top_dir, max_files=max_files)
         self.delete_file_structure(old_dir=old_dir, test_dir=top_dir)
 
