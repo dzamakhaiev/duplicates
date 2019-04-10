@@ -58,3 +58,35 @@ HASHING_CHECK = [
     ('Check that method will return hash of file', 'MD5'),
     ('Check that method will return hash of file even if hash type is incorrect', 'BFG')
 ]
+
+# test description, input dict, degree, expected result
+SCAN_SIZE_CHECK = [
+    ('Check calculating total file size in KB', {'test1.txt': {'f_size': 2048}, 'test2.txt': {'f_size': 4096}}, 1, 6),
+    ('Check calculating total file size in MB', {'test1.txt': {'f_size': 1500000}, 'test2.txt': {'f_size': 1120000}}, 2, 2.5),
+    ('Check calculating total file size in GB', {'test1.txt': {'f_size': 2048}, 'test2.txt': {'f_size': 4096}}, 3, 0),
+    ('Check calculating total file size in TB', {'test1.txt': {'f_size': 5000000000}, 'test2.txt': {'f_size': 4500000000}}, 4, 0.01),
+]
+
+# test description, files dict, hashes dict, degree, expected result
+HASH_SIZE_CHECK = [
+    ('Check calculating total file size in KB',
+     {'test1.txt': {'f_size': 2048}, 'test2.txt': {'f_size': 2048}}, {'hash1': {'f_paths': ['test1.txt', 'test2.txt']}}, 1, 4),
+    ('Check calculating total file size in MB',
+     {'test1.txt': {'f_size': 1500000}, 'test2.txt': {'f_size': 1500000}}, {'hash1': {'f_paths': ['test1.txt', 'test2.txt']}}, 2, 2.86),
+    ('Check calculating total file size in GB',
+     {'test1.txt': {'f_size': 2048}, 'test2.txt': {'f_size': 2048}}, {'hash1': {'f_paths': ['test1.txt', 'test2.txt']}}, 3, 0),
+    ('Check calculating total file size in TB',
+     {'test1.txt': {'f_size': 25500000000}, 'test2.txt': {'f_size': 25500000000}}, {'hash1': {'f_paths': ['test1.txt', 'test2.txt']}}, 4, 0.05),
+]
+
+# test description, files dict, hashes dict, degree, expected result
+DUPLICATES_SIZE_CHECK = [
+    ('Check calculating total file size in KB',
+     {'test1.txt': {'f_size': 2048}, 'test2.txt': {'f_size': 2048}}, {'hash1': {'f_paths': ['test1.txt', 'test2.txt'], 'f_size': 2048}}, 1, 2),
+    ('Check calculating total file size in MB',
+     {'test1.txt': {'f_size': 1500000}, 'test2.txt': {'f_size': 1500000}}, {'hash1': {'f_paths': ['test1.txt', 'test2.txt']}}, 2, 1.43),
+    ('Check calculating total file size in GB',
+     {'test1.txt': {'f_size': 2048}, 'test2.txt': {'f_size': 2048}}, {'hash1': {'f_paths': ['test1.txt', 'test2.txt'], 'f_size': 2048}}, 3, 0),
+    ('Check calculating total file size in TB',
+     {'test1.txt': {'f_size': 22000000000}, 'test2.txt': {'f_size': 22000000000}}, {'hash1': {'f_paths': ['test1.txt', 'test2.txt']}}, 4, 0.02),
+]

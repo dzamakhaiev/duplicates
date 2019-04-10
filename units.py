@@ -12,6 +12,9 @@ from test_input import DUPLICATES_CHECK
 from test_input import FIND_CHECK
 from test_input import HASH_CHECK
 from test_input import HASHING_CHECK
+from test_input import SCAN_SIZE_CHECK
+from test_input import HASH_SIZE_CHECK
+from test_input import DUPLICATES_SIZE_CHECK
 
 
 class Unit(unittest.TestCase):
@@ -249,6 +252,42 @@ class UnitDuplicates(Unit):
         exp_size = 0
         size = self.duplicates_instance.get_file_size([TEST_FILE])
         self.assertEqual(size, exp_size)
+
+    def test_get_scanned_size(self):
+        """
+        Check get_scanned_size method from Duplicates class. This method calculates total size of all scanned files
+        and returns value in kb, mb, gb, tb units.
+        """
+        for desc, input_dict, degree, exp_size in SCAN_SIZE_CHECK:
+            with self.subTest(msg=desc):
+                self.duplicates_instance.degree = degree
+                results = self.duplicates_instance.get_scanned_size(files=input_dict)
+                self.assertEqual(results, exp_size)
+
+    def test_get_hashed_size(self):
+        """
+        Check get_hashed_size method from Duplicates class. This method calculates total size of all hashed files
+        and returns value in kb, mb, gb, tb units. Also this method could get file size from 'files' dict.
+        """
+        for desc, files_dict, hashes_dict, degree, exp_size in HASH_SIZE_CHECK:
+            with self.subTest(msg=desc):
+                self.duplicates_instance.degree = degree
+                self.duplicates_instance.files = files_dict
+                results = self.duplicates_instance.get_hashed_size(hashes=hashes_dict)
+                self.assertEqual(results, exp_size)
+
+    def test_get_duplicates_size(self):
+        """
+        Check get_duplicates_size method from Duplicates class. This method calculates total size
+        of all duplicated files and returns value in kb, mb, gb, tb units.
+        Also this method could get file size from 'files' dict or from 'duplicates' dict.
+        """
+        for desc, files_dict, duplicates_dict, degree, exp_size in DUPLICATES_SIZE_CHECK:
+            with self.subTest(msg=desc):
+                self.duplicates_instance.degree = degree
+                self.duplicates_instance.files = files_dict
+                results = self.duplicates_instance.get_duplicates_size(duplicates=duplicates_dict)
+                self.assertEqual(results, exp_size)
 
 
 if __name__ == '__main__':
