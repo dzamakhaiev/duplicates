@@ -289,6 +289,18 @@ class UnitDuplicates(Unit):
                 results = self.duplicates_instance.get_duplicates_size(duplicates=duplicates_dict)
                 self.assertEqual(results, exp_size)
 
+    def test_write_results(self):
+        """
+        Check write_results method from, Duplicates class. This method writes 'results' dict to output file.
+        """
+        exp_results = {'result1': 'value', 'result2': 'value', 'result3': 'value'}
+        filename = duplicates.RESULTS_FILE
+        self.duplicates_instance.write_results(results=exp_results, results_file=filename)
+
+        results = file_handler.read_json_from_file(filename=filename)
+        file_handler.delete_file(filename=filename)
+        self.assertEqual(results, exp_results)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
