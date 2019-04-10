@@ -344,11 +344,11 @@ class Duplicates:
         duplicated_size = 0
         for f_meta in duplicates.values():
 
-            f_paths, f_size = f_meta['f_paths'], f_meta['f_size']
+            f_paths, f_size = f_meta.get('f_paths'), f_meta.get('f_size')
             if f_size:
                 duplicated_size += (len(f_paths) - 1) * f_size
             else:
-                duplicated_size += (len(f_paths) - 1) * self.get_file_size(f_paths[0])
+                duplicated_size += (len(f_paths) - 1) * self.get_file_size(f_paths)
 
         duplicated_size = round(duplicated_size / (1024 ** self.degree), 2)
         return duplicated_size
