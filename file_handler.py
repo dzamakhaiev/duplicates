@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import random
 
@@ -89,13 +90,6 @@ def delete_file(filename):
         print(e)
 
 
-def delete_dir(dirname):
-    try:
-        os.rmdir(dirname)
-    except (OSError, PermissionError) as e:
-        print(e)
-
-
 def delete_dir_recursively(dirname):
     try:
         shutil.rmtree(dirname)
@@ -106,11 +100,6 @@ def delete_dir_recursively(dirname):
 def delete_list_of_files(files):
     for filename in files:
         delete_file(filename)
-
-
-def delete_list_of_dirs(dirs):
-    for dirname in dirs:
-        delete_dir(dirname)
 
 
 def create_file_structure(file_structure):
@@ -127,3 +116,12 @@ def create_file_structure(file_structure):
             created_files.append(filename)
 
     return created_files, created_dirs
+
+
+def read_json_from_file(filename):
+    try:
+        with open(filename, 'r') as file:
+            return json.load(file)
+
+    except (OSError, PermissionError) as e:
+        print(e)
