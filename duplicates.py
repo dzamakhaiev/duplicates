@@ -37,6 +37,9 @@ logger.addHandler(handler)
 
 
 class Files:
+    """
+    This class works with filesystem
+    """
 
     def __init__(self, top_dir=TARGET_DIR, max_files=MAX_FILES):
         self.top_dir = top_dir
@@ -124,6 +127,9 @@ class Files:
 
 
 class Hashes:
+    """
+    Class calculates hashes for files and for stores them
+    """
 
     def __init__(self, alg=DEFAULT_ALG):
         self.alg = alg
@@ -174,6 +180,9 @@ class Hashes:
 
 
 class Duplicates:
+    """
+    Class for finding duplicated files in filesystem using hash of file.
+    """
 
     def __init__(self, args=None):
         # Store console args
@@ -186,7 +195,7 @@ class Duplicates:
         self.duplicates = {}
         self.results = OrderedDict()
 
-        # Init time measuring var
+        # Init time measuring dict
         self.timing = {}
 
         # Set up unit of measuring
@@ -203,6 +212,17 @@ class Duplicates:
         alg = self.args.alg if self.args else DEFAULT_ALG
         self.alg = alg
         self.hashes_obj = Hashes(alg=alg)
+
+    def convert_bytes_to(self, n_bytes, degree=None):
+        """
+        Convert bytes to kb, mb, gb, tb. Keep passing var outside for unittests
+        :param int n_bytes: bytes to convert
+        :param int degree: defined degree for conversion
+        :return: file size
+        """
+        if not degree:
+            degree = self.degree
+        return round(n_bytes / (1024 ** degree), 2)
 
     def find_all_files(self, top_dir=None, max_files=None):
         """
@@ -314,7 +334,7 @@ class Duplicates:
             files = self.files
 
         scanned_size = sum([int(f_meta.get('f_size')) for f_meta in files.values() if f_meta.get('f_size')])
-        scanned_size = round(scanned_size / (1024 ** self.degree), 2)
+        scanned_size = self.convert_bytes_to(scanned_size)
         return scanned_size
 
     def get_hashed_size(self, hashes=None):
@@ -330,7 +350,7 @@ class Duplicates:
             f_size = self.get_file_size(f_paths=h_meta['f_paths'])
             hashed_size += len(h_meta['f_paths']) * f_size
 
-        hashed_size = round(hashed_size / (1024 ** self.degree), 2)
+        hashed_size = self.convert_bytes_to(hashed_size)
         return hashed_size
 
     def get_duplicates_size(self, duplicates=None):
@@ -350,7 +370,7 @@ class Duplicates:
             else:
                 duplicated_size += (len(f_paths) - 1) * self.get_file_size(f_paths)
 
-        duplicated_size = round(duplicated_size / (1024 ** self.degree), 2)
+        duplicated_size = self.convert_bytes_to(duplicated_size)
         return duplicated_size
 
     def calculate_results(self):
