@@ -7,7 +7,7 @@ import hashlib
 import time
 import json
 import logging
-import args
+import args_parser
 from collections import OrderedDict
 from copy import deepcopy
 
@@ -27,13 +27,27 @@ UNITS = {"KB": (1, "kilobytes"), "MB": (2, "megabytes"), "GB": (3, "gigabytes"),
 logger = logging.getLogger("main")
 logger.setLevel(logging.INFO)
 if len(sys.argv) > 1:
-    USER_ARGS = args.parser.parse_args()
+    USER_ARGS = args_parser.parser.parse_args()
     handler = logging.FileHandler(USER_ARGS.log)
 else:
     handler = logging.FileHandler(LOG_FILE)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+
+def measure_execution(section):
+    # Measure time of execution and save in self var
+
+    def outer_wrapper(func):
+        def wrapper(self, *args, **kwargs):
+            start = time.time()
+            result = func(self, *args, **kwargs)
+            self.timing[section] = round(time.time() - start, 1)
+            return result
+
+        return wrapper
+    return outer_wrapper
 
 
 class Files:
@@ -218,19 +232,19 @@ class Duplicates:
         Convert bytes to kb, mb, gb, tb. Keep passing var outside for unittests
         :param int n_bytes: bytes to convert
         :param int degree: defined degree for conversion
-        :return: file size
+        :return: converted file size
         """
         if not degree:
             degree = self.degree
         return round(n_bytes / (1024 ** degree), 2)
 
+    @measure_execution(section='Scanning time')
     def find_all_files(self, top_dir=None, max_files=None):
         """
         Find all files in target directory using Files object.
-        Keep passing vars and returning for unit tests
+        Keep passing vars and returning result for unit tests
         """
         logger.info(msg='Start scanning the directory: {}'.format(self.args.path if self.args else TARGET_DIR))
-        start = time.time()
 
         if not top_dir or not max_files:
             files = self.files_obj.find()
@@ -238,59 +252,48 @@ class Duplicates:
             files = self.files_obj.find(top=top_dir, max_files=max_files)
 
         logger.info(msg='Complete scanning the directory')
-        duration = round(time.time() - start, 1)
-        self.timing['Scanning time'] = duration
-
         self.files = deepcopy(files)
         return files
 
+    @measure_execution(section='Checking time')
     def check_all_files(self, files=None):
         """
         Check all found files(using Files object) and store all equal files by size.
-        Keep passing vars and returning for unit tests
+        Keep passing var and returning result for unit tests
         """
         if not files:
             files = self.files
 
         logger.info(msg='Start checking found files for equal size')
-        start = time.time()
-
         equal_files = self.files_obj.find_equal_files(files=files)
-
         logger.info(msg='Complete checking found files')
-        duration = round(time.time() - start, 1)
-        self.timing['Checking time'] = duration
 
         self.equal_files = equal_files.copy()
         return equal_files
 
+    @measure_execution(section='Hashing time')
     def get_files_hashes(self, equal_files=None):
         """
         Get hashes for all found equal files(using Hashes object) and store it.
-        Keep passing vars and returning for unit tests
+        Keep passing var and returning result for unit tests
         """
         logger.info(msg='Start calculating hashes')
-        start = time.time()
 
         if not equal_files:
             equal_files = self.equal_files
 
         hashes = self.hashes_obj.calculate_hashes(equal_files=equal_files)
-
         logger.info(msg='Complete calculating hashes')
-        duration = round(time.time() - start, 1)
-        self.timing['Hashing time'] = duration
-
         self.hashes = deepcopy(hashes)
         return hashes
 
+    @measure_execution(section='Finding time')
     def find_duplicates(self, hashes=None):
         """
         Find duplicates in hashes dict. Duplicated hash has more than one file path.
-        Keep passing vars and returning for unit tests
+        Keep passing vars and returning result for unit tests
         """
         logger.info(msg='Start finding equal files by hash')
-        start = time.time()
 
         if not hashes:
             hashes = self.hashes
@@ -303,16 +306,13 @@ class Duplicates:
                 duplicates.update({f_hash: {'f_paths': paths['f_paths'], 'f_size': f_size}})
 
         logger.info(msg='Complete finding equal files')
-        duration = round(time.time() - start, 1)
-        self.timing['Finding time'] = duration
-
         self.duplicates = deepcopy(duplicates)
         return duplicates
 
     def get_file_size(self, f_paths):
         """
         Try to get file size files dict or directly from OS. Because all files in list have equal size,
-        it's fine to size any of them.
+        it's normal to get any of them.
         """
         for f_path in f_paths:
             if f_path in self.files.keys() and self.files[f_path]['f_size']:
@@ -328,7 +328,7 @@ class Duplicates:
     def get_scanned_size(self, files=None):
         """
         Get size of all scanned files in target directory.
-        Keep passing vars and returning for unit tests
+        Keep passing var and returning result for unit tests
         """
         if not files:
             files = self.files
@@ -340,7 +340,7 @@ class Duplicates:
     def get_hashed_size(self, hashes=None):
         """
         Get size of all hashed files.
-        Keep passing vars and returning for unit tests
+        Keep passing var and returning result for unit tests
         """
         if not hashes:
             hashes = self.hashes
@@ -356,7 +356,7 @@ class Duplicates:
     def get_duplicates_size(self, duplicates=None):
         """
         Get size of all duplicated files.
-        Keep passing vars and returning for unit tests
+        Keep passing var and returning result for unit tests
         """
         if not duplicates:
             duplicates = self.duplicates
@@ -447,7 +447,7 @@ if __name__ == '__main__':
 
     # user mode
     if len(sys.argv) > 1:
-        duplicates_obj = Duplicates(args=args.parser.parse_args())
+        duplicates_obj = Duplicates(args=args_parser.parser.parse_args())
 
     # debug mode
     else:
