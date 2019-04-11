@@ -295,6 +295,8 @@ class UnitDuplicates(Unit):
         """
         exp_results = {'result1': 'value', 'result2': 'value', 'result3': 'value'}
         filename = duplicates.RESULTS_FILE
+        if os.path.isfile(filename):
+            file_handler.delete_file(filename=filename)
         self.duplicates_instance.write_results(results=exp_results, results_file=filename)
 
         results = file_handler.read_json_from_file(filename=filename)
