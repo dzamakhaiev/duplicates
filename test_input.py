@@ -105,3 +105,9 @@ INTEGRATION_HASHES_CHECK = [
     ('Test dict with diff files by size', {'dir0': {'file0.txt': 1000, 'file1.txt': 10000, 'file2.txt': 100000}}, 0),
     ('Test dict with equal files by size', {'dir0': {'file0.txt': 1000, 'file1.txt': 1000, 'file2.txt': 1000}}, 1)
 ]
+
+# test description, input dict with file structure, expected len
+INTEGRATION_DUPLICATES_CHECK = [
+    ('Test dict with diff files by size', {'dir0': {'file0.txt': 1000, 'file1.txt': 10000, 'file2.txt': 100000}}, {}),
+    ('Test dict with equal files by size', {'dir0': {'file0.txt': 1000, 'file1.txt': 1000, 'file2.txt': 1000}}, 3)
+]
