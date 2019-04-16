@@ -401,7 +401,7 @@ class Duplicates:
     def show_duplicates_in_console(self):
         logger.info(msg='Show duplicates in console')
         for _, f_meta in self.duplicates.items():
-            print('=' * 50)
+            print('=' * 100)
             print('\n'.join([f_path for f_path in f_meta['f_paths']]))
 
             f_size = f_meta['f_size']
@@ -413,22 +413,23 @@ class Duplicates:
 
             print(total_str)
             logger.debug(msg=total_str)
+        print('=' * 100)
 
     def show_results(self):
         """
         Show results in console if flags allow that
         """
-        if self.args and not self.args.quiet:
-            self.show_results_in_console()
-
-        elif not self.args and not QUIET:
-            self.show_results_in_console()
-
         if self.args and not self.args.quiet and self.args.verbose:
             self.show_duplicates_in_console()
 
         elif not self.args and not QUIET and VERBOSE:
             self.show_duplicates_in_console()
+
+        if self.args and not self.args.quiet:
+            self.show_results_in_console()
+
+        elif not self.args and not QUIET:
+            self.show_results_in_console()
 
     def write_results(self, results=None, results_file=None):
         """
