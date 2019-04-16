@@ -90,3 +90,18 @@ DUPLICATES_SIZE_CHECK = [
     ('Check calculating total file size in TB',
      {'test1.txt': {'f_size': 22000000000}, 'test2.txt': {'f_size': 22000000000}}, {'hash1': {'f_paths': ['test1.txt', 'test2.txt']}}, 4, 0.02),
 ]
+
+# test description, input dict with file structure, expected result in list
+INTEGRATION_FILES_CHECK = [
+    ('Test dict with diff files by size', {'dir0': {'file0.txt': 1000, 'file1.txt': 10000, 'file2.txt': 100000}}, []),
+    ('Test dict with equal files by size', {'dir0': {'file0.txt': 1000, 'file1.txt': 1000, 'file2.txt': 1000}},
+     [os.path.join(test_dir, 'dir0', 'file0.txt'),
+      os.path.join(test_dir, 'dir0', 'file1.txt'),
+      os.path.join(test_dir, 'dir0', 'file2.txt')])
+]
+
+# test description, input dict with file structure, expected len
+INTEGRATION_HASHES_CHECK = [
+    ('Test dict with diff files by size', {'dir0': {'file0.txt': 1000, 'file1.txt': 10000, 'file2.txt': 100000}}, 0),
+    ('Test dict with equal files by size', {'dir0': {'file0.txt': 1000, 'file1.txt': 1000, 'file2.txt': 1000}}, 1)
+]
